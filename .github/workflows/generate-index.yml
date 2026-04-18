@@ -1,0 +1,43 @@
+name: Generate index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'tools/**'
+      - 'SKILL.md'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Regenerate index.json and refresh SKILL.md
+        run: node tools/generate-index.js
+
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add index.json SKILL.md
+            git commit -m "chore: regenerate index.json and SKILL.md"
+            git push
+          else
+            echo "No changes to commit."
+          fi

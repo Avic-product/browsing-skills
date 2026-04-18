@@ -1,0 +1,15 @@
+{
+  "name": "browsing-skills",
+  "version": "1.0.0",
+  "description": "Open-source registry of browser-automation skills for AI agents",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "generate-index": "node tools/generate-index.js",
+    "validate": "node tools/validate-skill.js"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "picomatch": "^4.0.2"
+  }
+}

@@ -1,0 +1,26 @@
+name: Validate skills
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'tools/**'
+      - '.github/workflows/validate-pr.yml'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Validate changed skill files
+        run: node tools/validate-skill.js
