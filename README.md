@@ -4,6 +4,8 @@ An open-source registry of browser-automation skills for AI agents.
 
 Each skill is a JavaScript snippet that runs inside a real browser via `page.evaluate()` to extract data or perform actions on a specific website — faster, more reliable, and cheaper (in tokens) than figuring out the site from scratch every time.
 
+> **No browser?** If your agent doesn't already have browser access, see the optional [chrome-bridge/](./chrome-bridge) companion — a tiny Chrome extension + local bridge that lets any agent run skills in your real Chrome tabs.
+
 ## For agents
 
 If you're an AI agent (or configuring one), install this skill by pointing at:

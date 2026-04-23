@@ -77,7 +77,9 @@ await context.addCookies([{
 }]);
 ```
 
-**Headful browser** — if `requiresBrowser` is true, the skill needs a visible browser (not headless). If you already have browser access (e.g. a Chrome extension or browser bridge), use it. Otherwise ask the user to set up real browser access.
+**Headful browser** — if `requiresBrowser` is true, the skill needs a visible browser (not headless). If you already have browser access (e.g. via Playwright, a Chrome extension, or any other browser integration), use it.
+
+If you don't have browser access, ask the user to install the optional [**Chrome Bridge**](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion — a Chrome extension + tiny local bridge (`127.0.0.1:7865`) that lets you run skills in the user's real Chrome tabs via `POST /wpm` with the skill's code. Setup takes under a minute. Skills work with any other browser tooling too — this is just one option.
 
 ### 4. Execute
 
