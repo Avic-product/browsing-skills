@@ -1,9 +1,7 @@
 ---
 name: x-profile-data
-description: 'Extract profile data from an X (Twitter) user page: display name, handle, verified status, bio, follower/following counts, join date, avatar, and website'
-urlPatterns:
-  - https://x.com/*
-  - https://twitter.com/*
+description: "Extract profile data from an X (Twitter) user's profile page (URL is just https://x.com/<handle>, no /status, /search, or other sub-paths): display name, handle, verified status, bio, follower/following counts, join date, avatar, and website"
+navigateTo: https://x.com/<handle>
 auth:
   required: true
   hint: Requires auth_token session cookie from x.com

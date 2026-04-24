@@ -1,103 +1,80 @@
 {
-  "generatedAt": "2026-04-23T07:03:25.311Z",
-  "skills": [
-    {
-      "name": "linkedin-post-data",
-      "path": "skills/linkedin.com/post-data.md",
-      "domains": [
-        "linkedin.com"
-      ],
-      "urlPatterns": [
-        "https://www.linkedin.com/posts/*",
-        "https://www.linkedin.com/feed/update/*"
-      ],
-      "description": "Extract post content, author info, engagement metrics, and timestamp from a LinkedIn post",
-      "auth": {
-        "required": false,
-        "hint": "Login not required for public posts. For private posts, provide li_at session cookie."
+  "generatedAt": "2026-04-24T13:32:25.397Z",
+  "domains": {
+    "linkedin.com": [
+      {
+        "name": "linkedin-post-data",
+        "path": "skills/linkedin.com/post-data.md",
+        "description": "Extract post content, author info, engagement metrics, and timestamp from a single LinkedIn post page (URLs like https://www.linkedin.com/posts/<slug> or /feed/update/<urn>)",
+        "navigateTo": "https://www.linkedin.com/posts/<post-slug>",
+        "auth": {
+          "required": false,
+          "hint": "Login not required for public posts. For private posts, provide li_at session cookie."
+        },
+        "requiresBrowser": false,
+        "tags": [
+          "linkedin",
+          "webmcp",
+          "extractor"
+        ],
+        "returns": "{ content, headline, datePublished, url, authorName, authorProfileUrl, reactionCount, commentCount, repostCount }"
+      }
+    ],
+    "x.com": [
+      {
+        "name": "x-post-data",
+        "path": "skills/x.com/post-data.md",
+        "description": "Extract post content, author info, engagement metrics, and media from a single X (Twitter) post page (URLs shaped like https://x.com/<handle>/status/<id>)",
+        "navigateTo": "https://x.com/<handle>/status/<id>",
+        "auth": {
+          "required": true,
+          "hint": "Requires auth_token session cookie from x.com"
+        },
+        "requiresBrowser": true,
+        "tags": [
+          "x",
+          "twitter",
+          "webmcp",
+          "extractor"
+        ],
+        "returns": "{ content, authorName, authorHandle, authorProfileUrl, verified, authorAvatarUrl, timestamp, url, replies, reposts, likes, bookmarks, views, photos, hasVideo }"
       },
-      "requiresBrowser": false,
-      "tags": [
-        "linkedin",
-        "webmcp",
-        "extractor"
-      ],
-      "returns": "{ content, headline, datePublished, url, authorName, authorProfileUrl, reactionCount, commentCount, repostCount }"
-    },
-    {
-      "name": "x-post-data",
-      "path": "skills/x.com/post-data.md",
-      "domains": [
-        "twitter.com",
-        "x.com"
-      ],
-      "urlPatterns": [
-        "https://x.com/*/status/*",
-        "https://twitter.com/*/status/*"
-      ],
-      "description": "Extract post content, author info, engagement metrics, and media from an X (Twitter) post",
-      "auth": {
-        "required": true,
-        "hint": "Requires auth_token session cookie from x.com"
+      {
+        "name": "x-profile-data",
+        "path": "skills/x.com/profile-data.md",
+        "description": "Extract profile data from an X (Twitter) user's profile page (URL is just https://x.com/<handle>, no /status, /search, or other sub-paths): display name, handle, verified status, bio, follower/following counts, join date, avatar, and website",
+        "navigateTo": "https://x.com/<handle>",
+        "auth": {
+          "required": true,
+          "hint": "Requires auth_token session cookie from x.com"
+        },
+        "requiresBrowser": true,
+        "tags": [
+          "x",
+          "twitter",
+          "webmcp",
+          "extractor"
+        ],
+        "returns": "{ displayName, handle, verified, url, bio, joinDate, following, followers, avatarUrl, website }"
       },
-      "requiresBrowser": true,
-      "tags": [
-        "x",
-        "twitter",
-        "webmcp",
-        "extractor"
-      ],
-      "returns": "{ content, authorName, authorHandle, authorProfileUrl, verified, authorAvatarUrl, timestamp, url, replies, reposts, likes, bookmarks, views, photos, hasVideo }"
-    },
-    {
-      "name": "x-profile-data",
-      "path": "skills/x.com/profile-data.md",
-      "domains": [
-        "twitter.com",
-        "x.com"
-      ],
-      "urlPatterns": [
-        "https://x.com/*",
-        "https://twitter.com/*"
-      ],
-      "description": "Extract profile data from an X (Twitter) user page: display name, handle, verified status, bio, follower/following counts, join date, avatar, and website",
-      "auth": {
-        "required": true,
-        "hint": "Requires auth_token session cookie from x.com"
-      },
-      "requiresBrowser": true,
-      "tags": [
-        "x",
-        "twitter",
-        "webmcp",
-        "extractor"
-      ],
-      "returns": "{ displayName, handle, verified, url, bio, joinDate, following, followers, avatarUrl, website }"
-    },
-    {
-      "name": "x-search",
-      "path": "skills/x.com/search.md",
-      "domains": [
-        "twitter.com",
-        "x.com"
-      ],
-      "urlPatterns": [
-        "https://x.com/search*",
-        "https://twitter.com/search*"
-      ],
-      "description": "Extract search results from an X (Twitter) search page: list of posts with content, author info, engagement metrics, and timestamps",
-      "auth": {
-        "required": true,
-        "hint": "Requires auth_token session cookie from x.com"
-      },
-      "requiresBrowser": true,
-      "tags": [
-        "x",
-        "twitter",
-        "webmcp",
-        "search"
-      ],
-      "returns": "{ query, results: [{ content, authorName, authorHandle, authorProfileUrl, verified, timestamp, postUrl, replies, reposts, likes, hasMedia }], totalResults }"
-    }
-  ]
+      {
+        "name": "x-search",
+        "path": "skills/x.com/search.md",
+        "description": "Search X (Twitter) for a query and extract the results page: list of posts with content, author info, engagement metrics, and timestamps. Run on https://x.com/search?q=<query>",
+        "navigateTo": "https://x.com/search?q=<query>",
+        "auth": {
+          "required": true,
+          "hint": "Requires auth_token session cookie from x.com"
+        },
+        "requiresBrowser": true,
+        "tags": [
+          "x",
+          "twitter",
+          "webmcp",
+          "search"
+        ],
+        "returns": "{ query, results: [{ content, authorName, authorHandle, authorProfileUrl, verified, timestamp, postUrl, replies, reposts, likes, hasMedia }], totalResults }"
+      }
+    ]
+  }
 }

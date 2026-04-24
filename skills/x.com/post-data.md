@@ -1,9 +1,7 @@
 ---
 name: x-post-data
-description: Extract post content, author info, engagement metrics, and media from an X (Twitter) post
-urlPatterns:
-  - https://x.com/*/status/*
-  - https://twitter.com/*/status/*
+description: "Extract post content, author info, engagement metrics, and media from a single X (Twitter) post page (URLs shaped like https://x.com/<handle>/status/<id>)"
+navigateTo: https://x.com/<handle>/status/<id>
 auth:
   required: true
   hint: Requires auth_token session cookie from x.com

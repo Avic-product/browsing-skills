@@ -33,16 +33,18 @@ export function parseSkill(filePath) {
   return { frontmatter, body, jsCode };
 }
 
-// Extract unique domains from a list of URL patterns.
-export function extractDomains(urlPatterns) {
-  const set = new Set();
-  for (const pattern of urlPatterns || []) {
-    const m = String(pattern).match(/:\/\/([^/]+)/);
-    if (!m) continue;
-    let host = m[1].replace(/^\*\./, '').replace(/^www\./, '');
-    if (host) set.add(host);
-  }
-  return [...set].sort();
+// Extract the domain from a skill's file path.
+// skills/x.com/post-data.md -> "x.com"
+export function domainFromPath(filePath, skillsRoot) {
+  const rel = path.relative(skillsRoot, filePath);
+  return rel.split(path.sep)[0];
+}
+
+// Extract the host from a URL (strips www., wildcards, paths).
+export function hostFromUrl(url) {
+  const m = String(url).match(/:\/\/([^/]+)/);
+  if (!m) return null;
+  return m[1].replace(/^\*\./, '').replace(/^www\./, '') || null;
 }
 
 // Walk skills/ and return array of file paths.

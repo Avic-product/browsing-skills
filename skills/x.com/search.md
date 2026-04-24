@@ -1,9 +1,7 @@
 ---
 name: x-search
-description: 'Extract search results from an X (Twitter) search page: list of posts with content, author info, engagement metrics, and timestamps'
-urlPatterns:
-  - https://x.com/search*
-  - https://twitter.com/search*
+description: "Search X (Twitter) for a query and extract the results page: list of posts with content, author info, engagement metrics, and timestamps. Run on https://x.com/search?q=<query>"
+navigateTo: https://x.com/search?q=<query>
 auth:
   required: true
   hint: Requires auth_token session cookie from x.com

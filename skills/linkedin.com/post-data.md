@@ -1,9 +1,7 @@
 ---
 name: linkedin-post-data
-description: Extract post content, author info, engagement metrics, and timestamp from a LinkedIn post
-urlPatterns:
-  - https://www.linkedin.com/posts/*
-  - https://www.linkedin.com/feed/update/*
+description: "Extract post content, author info, engagement metrics, and timestamp from a single LinkedIn post page (URLs like https://www.linkedin.com/posts/<slug> or /feed/update/<urn>)"
+navigateTo: https://www.linkedin.com/posts/<post-slug>
 auth:
   required: false
   hint: Login not required for public posts. For private posts, provide li_at session cookie.

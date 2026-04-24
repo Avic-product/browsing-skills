@@ -4,15 +4,14 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import picomatch from 'picomatch';
-import { parseSkill, extractDomains, listSkillFiles } from './parse-skill.js';
+import { parseSkill, domainFromPath, hostFromUrl, listSkillFiles } from './parse-skill.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'skills');
 
 const KEBAB_RE = /^[a-z0-9][a-z0-9-]*$/;
-const REQUIRED_FIELDS = ['name', 'description', 'urlPatterns'];
+const REQUIRED_FIELDS = ['name', 'description'];
 
 function validateOne(filePath) {
   const errors = [];
@@ -25,7 +24,7 @@ function validateOne(filePath) {
   const { frontmatter, jsCode } = parsed;
 
   for (const field of REQUIRED_FIELDS) {
-    if (frontmatter[field] === undefined || frontmatter[field] === null) {
+    if (frontmatter[field] === undefined || frontmatter[field] === null || frontmatter[field] === '') {
       errors.push(`missing required field: ${field}`);
     }
   }
@@ -34,36 +33,25 @@ function validateOne(filePath) {
     errors.push(`name must be kebab-case (got "${frontmatter.name}")`);
   }
 
-  if (frontmatter.urlPatterns) {
-    if (!Array.isArray(frontmatter.urlPatterns) || frontmatter.urlPatterns.length === 0) {
-      errors.push('urlPatterns must be a non-empty array');
-    } else {
-      for (const pattern of frontmatter.urlPatterns) {
-        if (typeof pattern !== 'string' || !pattern.includes('://')) {
-          errors.push(`invalid URL pattern: ${JSON.stringify(pattern)}`);
-          continue;
-        }
-        try {
-          picomatch(pattern);
-        } catch (e) {
-          errors.push(`URL pattern not a valid glob: "${pattern}" (${e.message})`);
-        }
-      }
-    }
-  }
-
-  // File path must be under skills/<domain>/ and the domain must match at least one URL pattern domain.
+  // File must live at skills/<domain>/<name>.md
   const rel = path.relative(SKILLS_DIR, filePath);
   const segments = rel.split(path.sep);
   if (segments.length !== 2) {
     errors.push(`file must live at skills/<domain>/<name>.md (got skills/${rel})`);
-  } else {
-    const folderDomain = segments[0];
-    const patternDomains = extractDomains(frontmatter.urlPatterns || []);
-    if (patternDomains.length > 0 && !patternDomains.includes(folderDomain)) {
-      errors.push(
-        `folder domain "${folderDomain}" does not match any urlPatterns domain (${patternDomains.join(', ')})`
-      );
+  }
+
+  // If navigateTo is provided, its host must match the folder domain.
+  if (frontmatter.navigateTo !== undefined) {
+    if (typeof frontmatter.navigateTo !== 'string') {
+      errors.push('navigateTo must be a string');
+    } else if (!frontmatter.navigateTo.startsWith('http')) {
+      errors.push(`navigateTo must start with http(s):// (got "${frontmatter.navigateTo}")`);
+    } else if (segments.length === 2) {
+      const folderDomain = segments[0];
+      const host = hostFromUrl(frontmatter.navigateTo);
+      if (host && host !== folderDomain) {
+        errors.push(`navigateTo host "${host}" does not match folder domain "${folderDomain}"`);
+      }
     }
   }
 
@@ -81,6 +69,11 @@ function validateOne(filePath) {
 
   if (frontmatter.tags !== undefined && !Array.isArray(frontmatter.tags)) {
     errors.push('tags must be an array');
+  }
+
+  // Reject old urlPatterns field — it was removed in favor of domain-keyed lookup.
+  if (frontmatter.urlPatterns !== undefined) {
+    errors.push('urlPatterns is no longer supported — remove it. Use navigateTo as a URL hint instead.');
   }
 
   // JS syntax check: wrap in a function and parse.

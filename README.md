@@ -39,9 +39,8 @@ Contributions are welcome! To add or fix a skill:
 ```markdown
 ---
 name: site-action-name
-description: One-sentence description of what it does
-urlPatterns:
-  - https://www.example.com/path/*
+description: "What the skill does and when to use it. Include a hint about what kind of page to run it on."
+navigateTo: https://www.example.com/path/<placeholder>
 auth:
   required: false
   hint: ""
@@ -77,7 +76,10 @@ Longer description. Document what the skill extracts or does, and what fields ar
 
 ### Rules for skill code
 
-- **Self-contained** — no external imports, no CDN scripts.
+- **One file per action.** Put it at `skills/<domain>/<action-name>.md`. The folder *is* the domain — the registry is organized by domain, not by URL patterns.
+- **Description is the discovery key.** Agents pick skills by reading the `description`. Make it specific about *what it does* and *when to use it*. Don't rely on URL-pattern matching — there isn't any.
+- **`navigateTo` is a template, not a matcher.** Use `<placeholder>` syntax (`<handle>`, `<query>`, `<id>`) to show the agent the URL shape. It's a hint, not enforced.
+- **Self-contained code** — no external imports, no CDN scripts.
 - **Use `var`** (not `let`/`const`) for maximum browser compatibility.
 - **WebMCP format** — an object with `name`, `description`, `inputSchema`, and an `execute(params)` function.
 - **Can return Promises** for async operations (scrolling, waiting for elements).
