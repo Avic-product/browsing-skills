@@ -1,41 +1,59 @@
 ---
-name: linkedin-post-data
-description: "Extract post content, author info, engagement metrics, and timestamp from a single LinkedIn post page (URLs like https://www.linkedin.com/posts/<slug> or /feed/update/<urn>)"
-navigateTo: https://www.linkedin.com/posts/<post-slug>
-auth:
-  required: false
-  hint: Login not required for public posts. For private posts, provide li_at session cookie.
-requiresBrowser: false
-tags:
-  - linkedin
-  - webmcp
-  - extractor
-returns: "{ content, headline, datePublished, url, authorName, authorProfileUrl, reactionCount, commentCount, repostCount }"
+name: browsing-linkedin
+description: "Use when the user wants to interact with LinkedIn — extract data from a specific post (content, author, reactions, comments). Works on linkedin.com post pages. No login required for public posts; for private posts the user must provide an li_at session cookie. Works without a browser thanks to JSON-LD on post pages, though a real browser gives richer data."
 ---
 
-# linkedin-post-data
+# LinkedIn — Browsing Skill
 
-Extracts structured data from a LinkedIn post page.
+This skill covers one action today:
+- **post-data** — extract a LinkedIn post's content, author, and engagement
 
-## Returns
+More LinkedIn actions (profile, company, search) can be added over time — PRs welcome.
 
-- `content` — the full post text
-- `headline` — short headline
-- `datePublished` — ISO timestamp when the post was published
-- `url` — canonical post URL
-- `authorName` — name of the post author
-- `authorProfileUrl` — URL to the author's profile
-- `reactionCount` — number of reactions (likes)
-- `commentCount` — number of comments
-- `repostCount` — number of reposts/shares (from DOM; not in JSON-LD)
+## Requirements
 
-## Notes
+**Auth:** Not required for public posts. If the post is private/restricted, ask the user for their `li_at` session cookie (DevTools → Application → Cookies → `li_at`). Inject before navigating:
 
-- Primary source is JSON-LD (`<script type="application/ld+json">`), which LinkedIn embeds on public post pages.
-- Falls back to DOM selectors for fields missing from JSON-LD (author info, repost count).
-- Works without login on public posts; for private posts provide `li_at` session cookie.
+```js
+await context.addCookies([{
+  name: 'li_at', value: '<user-provided>', domain: '.linkedin.com',
+  path: '/', httpOnly: true, secure: true
+}]);
+```
 
-## Code
+**Browser:** Not required for the main extraction path (uses JSON-LD embedded in the page, works with plain `fetch`). A real browser is recommended if you need the repost count, which relies on DOM fallbacks.
+
+## How to run
+
+### Without a browser (lightweight)
+
+```js
+// fetch the post URL, then run the code against a DOM shim that supports document.querySelectorAll
+// returns content, author, reactions, comments from JSON-LD. Repost count will be 0.
+```
+
+### With a browser (full extraction)
+
+Navigate to the post, then execute via `page.evaluate()` or chrome-bridge `/wpm`:
+
+```js
+const result = await page.evaluate(async (code) => {
+  const tool = eval(code);
+  return await tool.execute({ mode: "data" });
+}, scriptCode);
+
+const data = JSON.parse(result.content[0].text);
+```
+
+Use `mode: "display"` for self-contained HTML output.
+
+---
+
+## Action: post-data
+
+**Navigate to:** `https://www.linkedin.com/posts/<post-slug>` or `https://www.linkedin.com/feed/update/<urn>` (the post's canonical URL).
+
+**Code:**
 
 ```js
 ({
@@ -144,3 +162,13 @@ Extracts structured data from a LinkedIn post page.
   }
 })
 ```
+
+**Returns:** `{ content, headline, datePublished, url, authorName, authorProfileUrl, reactionCount, commentCount, repostCount }`
+
+**Notes:** Primary extraction is via JSON-LD (`<script type="application/ld+json">` on the post page). DOM fallbacks fill in missing fields. Repost count lives only in DOM — without a real browser it'll come back as 0.
+
+---
+
+## Reporting issues
+
+If this breaks (LinkedIn changes their JSON-LD or DOM), file an issue: https://github.com/tomer-van-cohen/browsing-skills/issues/new/choose

@@ -1,122 +1,118 @@
 # browsing-skills
 
-An open-source registry of browser-automation skills for AI agents.
-
-Each skill is a JavaScript snippet that runs inside a real browser via `page.evaluate()` to extract data or perform actions on a specific website — faster, more reliable, and cheaper (in tokens) than figuring out the site from scratch every time.
+An open-source library of **per-website browser-automation skills** for AI agents. Each supported site is a first-class skill in standard [SKILL.md](https://docs.anthropic.com/en/docs/agents/skills) format — installable on its own or together as a bundle.
 
 > **No browser?** If your agent doesn't already have browser access, see the optional [chrome-bridge/](./chrome-bridge) companion — a tiny Chrome extension + local bridge that lets any agent run skills in your real Chrome tabs.
 
-## For agents
+## Two ways to install
 
-If you're an AI agent (or configuring one), install this skill by pointing at:
+### A. The umbrella (I want all supported sites)
+
+Point your agent at the top-level [`SKILL.md`](./SKILL.md). It tells the agent which sites are supported and how to load each site's skill on demand:
 
 ```
 https://raw.githubusercontent.com/tomer-van-cohen/browsing-skills/main/SKILL.md
 ```
 
-That file tells you how to use the registry: fetch `index.json`, match URLs, pull skill files, execute the code.
+This is the right choice if your agent might interact with any of the supported sites.
 
-## For humans
+### B. A single site (I only care about one)
 
-Browse the skills at [`skills/`](./skills). Each folder is a supported domain; each `.md` file is one skill.
+If you're building an agent that only ever works with one site, skip the umbrella — install that site's SKILL.md directly. For example, a LinkedIn-only agent:
 
-Every skill file is self-contained:
-- YAML frontmatter with metadata (name, URL patterns, auth requirements, etc.)
-- A fenced ```js``` block with the executable code
+```
+https://raw.githubusercontent.com/tomer-van-cohen/browsing-skills/main/skills/linkedin.com/SKILL.md
+```
+
+This is leaner — no list of unrelated sites, no routing step. Each site is a complete, standalone skill.
+
+## Repo layout
+
+```
+browsing-skills/
+├── SKILL.md                     # umbrella — lists supported sites, routes agents
+├── skills/
+│   ├── linkedin.com/
+│   │   └── SKILL.md             # linkedin skill (all linkedin actions in one file)
+│   └── x.com/
+│       └── SKILL.md             # x (twitter) skill (all x actions in one file)
+├── chrome-bridge/               # optional browser-access companion
+└── tools/                       # validation + umbrella regeneration
+```
+
+A site's `SKILL.md` is a complete, standalone skill that covers every action available for that site — search, extract, post, etc. Adding a new action means editing that file, not creating a new one.
 
 ## Contributing
 
-Contributions are welcome! To add or fix a skill:
+To add a new supported site or improve an existing one:
 
-1. **Fork this repo** and create a branch.
-2. **Add or edit a skill file** at `skills/<domain>/<skill-name>.md`. Follow the format in any existing skill.
-3. **Test it** locally — run the code via a browser bridge (e.g. [browser-relay](https://github.com/tomer-van-cohen/browser-relay)) against a real page, confirm the output.
-4. **Open a pull request.** CI will validate the skill structure (frontmatter, URL patterns, JS syntax). A maintainer will review and merge.
-5. On merge, `index.json` and `SKILL.md` auto-regenerate — no manual edits needed.
+1. Fork the repo, create a branch.
+2. Add or edit `skills/<domain>/SKILL.md`.
+3. Test your code against a real page (via [chrome-bridge](./chrome-bridge) or any browser automation you have).
+4. Open a PR. CI validates frontmatter, JS syntax, and structure.
+5. On merge to main, the umbrella `SKILL.md`'s supported-site list regenerates automatically.
 
-### Skill file template
+### Site SKILL.md template
 
 ```markdown
 ---
-name: site-action-name
-description: "What the skill does and when to use it. Include a hint about what kind of page to run it on."
-navigateTo: https://www.example.com/path/<placeholder>
-auth:
-  required: false
-  hint: ""
-requiresBrowser: true
-tags: [example, extractor]
-returns: "{ field1, field2 }"
+name: browsing-<site>
+description: "Use when the user wants to interact with <site> — <list the actions>. <auth/browser notes>."
 ---
 
-# site-action-name
+# <site> — Browsing Skill
 
-Longer description. Document what the skill extracts or does, and what fields are returned.
+Short intro explaining which actions are covered.
 
-## Code
+## Requirements
+
+Auth notes, browser notes, cookie injection snippets, etc.
+
+## How to run any action
+
+Shared execution pattern (page.evaluate / chrome-bridge /wpm).
+
+---
+
+## Action: <action-1>
+
+**Navigate to:** `https://...`
+
+**Code:**
 
 ​```js
 ({
-  name: "site-action-name",
-  description: "What this tool extracts",
-  inputSchema: {
-    type: "object",
-    properties: {
-      mode: { type: "string", enum: ["data", "display"] }
-    }
-  },
-  execute: function(params) {
-    var mode = (params && params.mode) || "data";
-    // extraction logic
-    return { content: [{ type: "text", text: JSON.stringify(data) }] };
-  }
+  name: "<site>-<action-1>",
+  description: "...",
+  inputSchema: { ... },
+  execute: function(params) { /* ... */ }
 })
 ​```
+
+**Returns:** `{ ... }`
+
+---
+
+## Action: <action-2>
+
+...
 ```
 
-### Rules for skill code
+### Conventions
 
-- **One file per action.** Put it at `skills/<domain>/<action-name>.md`. The folder *is* the domain — the registry is organized by domain, not by URL patterns.
-- **Description is the discovery key.** Agents pick skills by reading the `description`. Make it specific about *what it does* and *when to use it*. Don't rely on URL-pattern matching — there isn't any.
-- **`navigateTo` is a template, not a matcher.** Use `<placeholder>` syntax (`<handle>`, `<query>`, `<id>`) to show the agent the URL shape. It's a hint, not enforced.
+- **One SKILL.md per site.** All actions for that site live in one file, each as its own section with a ```js``` code block. This keeps each skill a standalone unit.
+- **The `description` in frontmatter is the trigger.** Agent frameworks match user intent against it. Be specific about what the skill does and when.
+- **Skill code blocks** (`({ name, execute, ... })`) are validated by CI for JS syntax. Non-skill snippets (like cookie-injection examples) aren't validated — they're documentation.
+- **Use `var`** (not `let`/`const`) for maximum compatibility in any browser.
 - **Self-contained code** — no external imports, no CDN scripts.
-- **Use `var`** (not `let`/`const`) for maximum browser compatibility.
-- **WebMCP format** — an object with `name`, `description`, `inputSchema`, and an `execute(params)` function.
-- **Can return Promises** for async operations (scrolling, waiting for elements).
-- **Set `requiresBrowser: true`** if the site blocks headless browsers.
-- **Set `auth.required: true`** if the site requires login — include a `hint` explaining which cookie/token the user needs to provide.
+- **WebMCP format** — each action is an object with `name`, `description`, `inputSchema`, and an `execute(params)` function. It returns `{ content: [{ type: "text", text: ... }] }`.
 
 ### Reporting broken or missing skills
 
 Open a [GitHub issue](https://github.com/tomer-van-cohen/browsing-skills/issues/new/choose) using one of the templates:
 - **skill-broken** — a skill stopped working
-- **skill-request** — a site/action not yet covered
-- **skill-enhancement** — existing skill needs more fields
-
-## How it works
-
-```
-┌─────────┐    1. fetch index     ┌──────────────────┐
-│  Agent  │ ────────────────────► │   GitHub (raw)   │
-│         │ ◄──────────────────── │  index.json      │
-└─────────┘    2. match URL       └──────────────────┘
-     │
-     │         3. fetch skill
-     ▼
-┌─────────────────────────────────────┐
-│  skills/linkedin.com/post-data.md   │
-│  ─ frontmatter                      │
-│  ─ ```js  …  ```                    │
-└─────────────────────────────────────┘
-     │
-     │         4. extract code + execute
-     ▼
-┌───────────────┐
-│ page.evaluate │  ← real browser
-└───────────────┘
-```
-
-No server. No database. No auth. Just markdown files and git.
+- **skill-request** — a site not yet covered
+- **skill-enhancement** — existing skill needs more actions or fields
 
 ## License
 

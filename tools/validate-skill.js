@@ -1,31 +1,57 @@
 #!/usr/bin/env node
-// Validates skill files. Pass file paths as args, or no args to validate all.
+// Validates site SKILL.md files under skills/<domain>/SKILL.md.
+// Pass file paths as args, or no args to validate all.
 // Exits with code 1 if any validation fails.
 
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseSkill, domainFromPath, hostFromUrl, listSkillFiles } from './parse-skill.js';
+import { parseSkill } from './parse-skill.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'skills');
 
 const KEBAB_RE = /^[a-z0-9][a-z0-9-]*$/;
-const REQUIRED_FIELDS = ['name', 'description'];
+
+function listSiteSkills() {
+  if (!fs.existsSync(SKILLS_DIR)) return [];
+  const out = [];
+  for (const name of fs.readdirSync(SKILLS_DIR)) {
+    const dir = path.join(SKILLS_DIR, name);
+    const skillFile = path.join(dir, 'SKILL.md');
+    if (fs.statSync(dir).isDirectory() && fs.existsSync(skillFile)) {
+      out.push(skillFile);
+    }
+  }
+  return out.sort();
+}
+
+function parseAllJsBlocks(body) {
+  return [...body.matchAll(/```js\n([\s\S]*?)\n```/g)].map(m => m[1]);
+}
 
 function validateOne(filePath) {
   const errors = [];
-  let parsed;
+
+  // File must live at skills/<domain>/SKILL.md
+  const rel = path.relative(SKILLS_DIR, filePath);
+  const segments = rel.split(path.sep);
+  if (segments.length !== 2 || segments[1] !== 'SKILL.md') {
+    errors.push(`file must live at skills/<domain>/SKILL.md (got skills/${rel})`);
+  }
+
+  let frontmatter, body;
   try {
-    parsed = parseSkill(filePath);
+    ({ frontmatter, body } = parseSkill(filePath));
   } catch (e) {
     return [e.message];
   }
-  const { frontmatter, jsCode } = parsed;
 
-  for (const field of REQUIRED_FIELDS) {
-    if (frontmatter[field] === undefined || frontmatter[field] === null || frontmatter[field] === '') {
-      errors.push(`missing required field: ${field}`);
+  // Required frontmatter
+  for (const field of ['name', 'description']) {
+    if (!frontmatter[field] || typeof frontmatter[field] !== 'string') {
+      errors.push(`missing or non-string frontmatter field: ${field}`);
     }
   }
 
@@ -33,54 +59,32 @@ function validateOne(filePath) {
     errors.push(`name must be kebab-case (got "${frontmatter.name}")`);
   }
 
-  // File must live at skills/<domain>/<name>.md
-  const rel = path.relative(SKILLS_DIR, filePath);
-  const segments = rel.split(path.sep);
-  if (segments.length !== 2) {
-    errors.push(`file must live at skills/<domain>/<name>.md (got skills/${rel})`);
-  }
-
-  // If navigateTo is provided, its host must match the folder domain.
-  if (frontmatter.navigateTo !== undefined) {
-    if (typeof frontmatter.navigateTo !== 'string') {
-      errors.push('navigateTo must be a string');
-    } else if (!frontmatter.navigateTo.startsWith('http')) {
-      errors.push(`navigateTo must start with http(s):// (got "${frontmatter.navigateTo}")`);
-    } else if (segments.length === 2) {
-      const folderDomain = segments[0];
-      const host = hostFromUrl(frontmatter.navigateTo);
-      if (host && host !== folderDomain) {
-        errors.push(`navigateTo host "${host}" does not match folder domain "${folderDomain}"`);
-      }
-    }
-  }
-
-  if (frontmatter.auth !== undefined) {
-    if (typeof frontmatter.auth !== 'object' || frontmatter.auth === null) {
-      errors.push('auth must be an object');
-    } else if (typeof frontmatter.auth.required !== 'boolean') {
-      errors.push('auth.required must be a boolean');
-    }
-  }
-
-  if (frontmatter.requiresBrowser !== undefined && typeof frontmatter.requiresBrowser !== 'boolean') {
-    errors.push('requiresBrowser must be a boolean');
-  }
-
-  if (frontmatter.tags !== undefined && !Array.isArray(frontmatter.tags)) {
-    errors.push('tags must be an array');
-  }
-
-  // Reject old urlPatterns field — it was removed in favor of domain-keyed lookup.
+  // Reject legacy fields
   if (frontmatter.urlPatterns !== undefined) {
-    errors.push('urlPatterns is no longer supported — remove it. Use navigateTo as a URL hint instead.');
+    errors.push('urlPatterns is no longer supported — the skill body documents which URLs to use.');
+  }
+  if (frontmatter.navigateTo !== undefined) {
+    errors.push('navigateTo in frontmatter is no longer used — document the URL in the body near each action.');
   }
 
-  // JS syntax check: wrap in a function and parse.
-  try {
-    new Function(`return (${jsCode});`);
-  } catch (e) {
-    errors.push(`JS code has syntax error: ${e.message}`);
+  // Find the executable skill-code blocks (WebMCP tool expressions).
+  // Convention: blocks that start with `({` and contain `execute` are skill code;
+  // other ```js``` blocks are illustrative snippets and aren't syntax-checked.
+  const jsBlocks = parseAllJsBlocks(body);
+  const skillBlocks = jsBlocks
+    .map((code, i) => ({ code, i }))
+    .filter(({ code }) => /^\s*\(\s*\{/.test(code) && /\bexecute\b\s*:/.test(code));
+
+  if (skillBlocks.length === 0) {
+    errors.push('skill body must contain at least one WebMCP ```js``` block (an expression starting with `({` and defining an `execute` function)');
+  }
+
+  for (const { code, i } of skillBlocks) {
+    try {
+      new Function(`return (${code});`);
+    } catch (e) {
+      errors.push('```js``` block #' + (i + 1) + ': syntax error — ' + e.message);
+    }
   }
 
   return errors;
@@ -88,7 +92,7 @@ function validateOne(filePath) {
 
 function main() {
   const args = process.argv.slice(2);
-  const files = args.length > 0 ? args : listSkillFiles(SKILLS_DIR);
+  const files = args.length > 0 ? args : listSiteSkills();
 
   let failed = 0;
   for (const file of files) {

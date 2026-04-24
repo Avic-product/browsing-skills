@@ -1,4 +1,4 @@
-name: Generate index
+name: Regenerate umbrella
 
 on:
   push:
@@ -27,16 +27,16 @@ jobs:
 
       - run: npm ci
 
-      - name: Regenerate index.json and refresh SKILL.md
-        run: node tools/generate-index.js
+      - name: Refresh umbrella SKILL.md with current supported-site list
+        run: node tools/generate-umbrella.js
 
       - name: Commit changes if any
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [[ -n "$(git status --porcelain)" ]]; then
-            git add index.json SKILL.md
-            git commit -m "chore: regenerate index.json and SKILL.md"
+            git add SKILL.md
+            git commit -m "chore: regenerate umbrella SKILL.md"
             git push
           else
             echo "No changes to commit."

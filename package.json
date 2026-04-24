@@ -5,11 +5,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "generate-index": "node tools/generate-index.js",
+    "generate-umbrella": "node tools/generate-umbrella.js",
     "validate": "node tools/validate-skill.js"
   },
   "dependencies": {
-    "js-yaml": "^4.1.0",
-    "picomatch": "^4.0.2"
+    "js-yaml": "^4.1.0"
   }
 }
