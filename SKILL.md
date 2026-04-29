@@ -1,7 +1,8 @@
 ---
 name: browsing-skills
-description: "Umbrella skill for a library of website-specific browsing skills. Use when the user's request targets one of these specific websites: <!-- DOMAINS:START -->linkedin.com, x.com<!-- DOMAINS:END -->. For supported sites: load the site-specific skill at skills/<domain>/SKILL.md from this repo, then follow its instructions. For unsupported sites: handle the request the normal way — don't force this skill. Each site's skill is also installable independently — if you only ever deal with one site, install that site's skill directly and skip this umbrella."
+description: "Umbrella skill for a library of website-specific browsing skills. Use when the user's request targets one of these specific websites: <!-- DOMAINS:START -->booking.com, linkedin.com, x.com<!-- DOMAINS:END -->. For supported sites: load the site-specific skill at skills/<domain>/SKILL.md from this repo, then follow its instructions. For unsupported sites: handle the request the normal way — don't force this skill. Each site's skill is also installable independently — if you only ever deal with one site, install that site's skill directly and skip this umbrella."
 supportedDomains:
+  - booking.com
   - linkedin.com
   - x.com
 ---
@@ -16,7 +17,7 @@ Repo: https://github.com/tomer-van-cohen/browsing-skills
 
 You're loaded into an agent that might work with *any* website. When the user mentions a specific site, you want to check: is there a prebuilt skill for it?
 
-- **Supported site** (`<!-- DOMAINS:START -->linkedin.com, x.com<!-- DOMAINS:END -->`) → load the site's skill, follow its instructions.
+- **Supported site** (`<!-- DOMAINS:START -->booking.com, linkedin.com, x.com<!-- DOMAINS:END -->`) → load the site's skill, follow its instructions.
 - **Unsupported site** → handle the request the way you normally would.
 
 ## When to skip this umbrella
