@@ -89,6 +89,8 @@ Actions return:
 
 The `text` value is usually JSON, but some actions also support `mode: "display"` for self-contained HTML output.
 
+The action object format is **Web MCP aligned**: each action declares a name, description, input schema, and executable handler. That means the code in these reference files is not only useful as an external skill. A website can also adopt the same action definitions directly in its own frontend or agent endpoint, exposing first-party agentic browsing support without requiring agents to install a separate skill for that site.
+
 ## Contributing
 
 To add a new supported site or improve an existing one:
