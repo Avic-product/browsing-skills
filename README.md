@@ -12,13 +12,13 @@ The library currently includes skills for:
 
 | Website | Skill |
 |---|---|
-| Airbnb | [`skills/airbnb.com`](./skills/airbnb.com) |
-| Booking.com | [`skills/booking.com`](./skills/booking.com) |
-| Facebook | [`skills/facebook.com`](./skills/facebook.com) |
-| LinkedIn | [`skills/linkedin.com`](./skills/linkedin.com) |
 | Reddit | [`skills/reddit.com`](./skills/reddit.com) |
-| TikTok | [`skills/tiktok.com`](./skills/tiktok.com) |
 | X | [`skills/x.com`](./skills/x.com) |
+| LinkedIn | [`skills/linkedin.com`](./skills/linkedin.com) |
+| TikTok | [`skills/tiktok.com`](./skills/tiktok.com) |
+| Facebook | [`skills/facebook.com`](./skills/facebook.com) |
+| Booking.com | [`skills/booking.com`](./skills/booking.com) |
+| Airbnb | [`skills/airbnb.com`](./skills/airbnb.com) |
 
 ## Two ways to install
 
