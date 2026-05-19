@@ -1,9 +1,13 @@
 ---
 name: browsing-skills
-description: "Umbrella skill for a library of website-specific browsing skills. Use when the user's request targets one of these specific websites: <!-- DOMAINS:START -->booking.com, linkedin.com, x.com<!-- DOMAINS:END -->. For supported sites: load the site-specific skill at skills/<domain>/SKILL.md from this repo, then follow its instructions. For unsupported sites: handle the request the normal way — don't force this skill. Each site's skill is also installable independently — if you only ever deal with one site, install that site's skill directly and skip this umbrella."
+description: "Umbrella skill for a library of website-specific browsing skills. Use when the user's request targets one of these specific websites: <!-- DOMAINS:START -->airbnb.com, booking.com, facebook.com, linkedin.com, reddit.com, tiktok.com, x.com<!-- DOMAINS:END -->. For supported sites: load the site-specific action index at skills/<domain>/SKILL.md from this repo, then open only the linked reference file for the chosen action. For unsupported sites: handle the request the normal way — don't force this skill. Each site's skill is also installable independently — if you only ever deal with one site, install that site's skill directly and skip this umbrella."
 supportedDomains:
+  - airbnb.com
   - booking.com
+  - facebook.com
   - linkedin.com
+  - reddit.com
+  - tiktok.com
   - x.com
 ---
 
@@ -17,7 +21,7 @@ Repo: https://github.com/tomer-van-cohen/browsing-skills
 
 You're loaded into an agent that might work with *any* website. When the user mentions a specific site, you want to check: is there a prebuilt skill for it?
 
-- **Supported site** (`<!-- DOMAINS:START -->booking.com, linkedin.com, x.com<!-- DOMAINS:END -->`) → load the site's skill, follow its instructions.
+- **Supported site** (`<!-- DOMAINS:START -->airbnb.com, booking.com, facebook.com, linkedin.com, reddit.com, tiktok.com, x.com<!-- DOMAINS:END -->`) → load the site's skill, follow its instructions.
 - **Unsupported site** → handle the request the way you normally would.
 
 ## When to skip this umbrella
@@ -30,7 +34,7 @@ https://raw.githubusercontent.com/tomer-van-cohen/browsing-skills/main/skills/li
 
 ## How to load a site's skill
 
-Fetch the raw SKILL.md for the domain the user mentioned:
+Fetch the raw action index for the domain the user mentioned:
 
 ```
 GET https://raw.githubusercontent.com/tomer-van-cohen/browsing-skills/main/skills/<domain>/SKILL.md
@@ -40,19 +44,25 @@ Examples:
 - `skills/x.com/SKILL.md`
 - `skills/linkedin.com/SKILL.md`
 
-Read the fetched skill's instructions and follow them. Each site skill tells you:
-- Which actions are available (e.g. post extraction, profile extraction, search)
-- The URL to navigate to for each action
+Read the fetched skill index, choose the matching action, then fetch only that action's linked markdown file under `skills/<domain>/references/`. The reference file tells you:
+- Which URL to navigate to for the action
 - The JavaScript to execute, in a ```js``` code block
+- The action's return shape
 - Auth and browser requirements
 
 ## How site skills work (mental model)
 
-A site skill is a markdown file with:
+A site skill is a small markdown index with:
 
 1. **Frontmatter** — machine-readable metadata (name, description, etc.)
-2. **Body** — human-readable instructions for the agent, organized by action
-3. **Fenced ```js``` code blocks** — the actual scripts to run in the browser via `page.evaluate()` (or the chrome-bridge `/wpm` endpoint if you don't have native browser access)
+2. **Action Index** — short descriptions of available actions and links to full specs
+3. **Action reference markdown** — one file per action under `references/`, with requirements, navigation details, a fenced ```js``` code block, and the return shape
+
+## Benchmarks
+
+This repo benchmarks each action against a no-skill browser agent. The skill path loads the site action index plus one action reference, then runs the maintained action code. The no-skill path inspects the live page DOM, derives selectors at runtime, and iterates until it succeeds or times out.
+
+Each site `SKILL.md` includes a compact benchmark table for its actions. Detailed benchmark notes and methodology live in [`BENCHMARKS.md`](./BENCHMARKS.md).
 
 You don't need any custom tooling — fetch the file, read it, follow it.
 
@@ -61,6 +71,43 @@ You don't need any custom tooling — fetch the file, read it, follow it.
 Most skills require a real browser because target sites are JS-rendered. If your agent has browser access (Playwright, a Chrome extension, etc.), use it.
 
 If you don't have browser access, the optional [Chrome Bridge](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion is a tiny Chrome extension + local bridge that lets you run skills in the user's real Chrome tabs. Setup: under a minute.
+
+### Chrome Bridge Quickstart
+
+Use Chrome Bridge when the target site requires the user's already-signed-in Chrome session, or when Playwright/new browser contexts cannot access the page.
+
+Start the local bridge server from this repo:
+
+```bash
+cd chrome-bridge/server
+node bridge.js
+```
+
+Expected server output:
+
+```text
+[bridge] Listening on http://127.0.0.1:7865
+[bridge] Waiting for extension to connect...
+[bridge] Extension connected
+```
+
+If the extension is not connected, load `chrome-bridge/extension/` as an unpacked Chrome extension from `chrome://extensions/`.
+
+Check open tabs:
+
+```bash
+curl http://127.0.0.1:7865/tabs
+```
+
+Run a skill action in a specific tab:
+
+```bash
+curl -X POST http://127.0.0.1:7865/run-action \
+  -H 'Content-Type: application/json' \
+  -d '{"tabId":123,"code":"({ execute: function(params) { return { content: [{ type: \"text\", text: document.title }] }; } })","params":{"mode":"data"}}'
+```
+
+When using Bridge on sensitive logged-in accounts, keep actions read-only unless the user explicitly asks otherwise. Prefer selecting a `tabId` from `/tabs` instead of relying on the active tab.
 
 ## Reporting issues / requesting skills
 

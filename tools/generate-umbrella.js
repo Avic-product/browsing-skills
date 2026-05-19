@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Regenerates the umbrella SKILL.md's domain list from the skills/ directory.
 // Run on merge to main via GitHub Actions.
-// Does NOT produce an index.json — each site's SKILL.md is the source of truth.
+// Does NOT produce an index.json — each site's directory is the source of truth.
 
 import fs from 'node:fs';
 import path from 'node:path';

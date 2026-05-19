@@ -23,9 +23,9 @@ const httpServer = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === 'POST' && ['/eval', '/wpm', '/navigate', '/type', '/click', '/cdp', '/evalInFrame', '/reload'].includes(req.url)) {
+  if (req.method === 'POST' && ['/eval', '/run-action', '/navigate', '/type', '/click', '/cdp', '/evalInFrame', '/reload'].includes(req.url)) {
     const body = await readBody(req);
-    const action = req.url.slice(1); // '/eval' → 'eval', '/wpm' → 'wpm', '/navigate' → 'navigate'
+    const action = req.url === '/run-action' ? 'runAction' : req.url.slice(1);
     const result = await sendToExtension({ action, ...body });
     res.writeHead(result.ok ? 200 : 500);
     res.end(JSON.stringify(result.ok ? result.data : { error: result.error }));

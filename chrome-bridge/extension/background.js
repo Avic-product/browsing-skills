@@ -13,7 +13,7 @@ function connect() {
   ws = new WebSocket(WS_URL);
 
   ws.onopen = () => {
-    console.log('[WPM Bridge] Connected');
+    console.log('[Action Bridge] Connected');
     reconnectDelay = 1000;
   };
 
@@ -39,14 +39,14 @@ function connect() {
         const tabs = await chrome.tabs.query({});
         result = { id, ok: true, data: tabs.map(t => ({ id: t.id, url: t.url, title: t.title })) };
 
-      } else if (action === 'eval' || action === 'wpm') {
+      } else if (action === 'eval' || action === 'runAction') {
         if (!target) throw new Error('No active tab');
 
         // Use chrome.debugger to evaluate in page context — no CSP issues
         await chrome.debugger.attach({ tabId: target }, '1.3');
         try {
           var expr;
-          if (action === 'wpm') {
+          if (action === 'runAction') {
             var paramsJson = JSON.stringify(params || {});
             expr = '(async function(){ try { var tool = (' + code + '); if (tool && typeof tool.execute === "function") { return await tool.execute(' + paramsJson + '); } return {error:"No execute"}; } catch(e) { return {error:e.message}; } })()';
           } else {

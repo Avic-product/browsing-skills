@@ -33,21 +33,27 @@ browsing-skills/
 ├── SKILL.md                     # umbrella — lists supported sites, routes agents
 ├── skills/
 │   ├── linkedin.com/
-│   │   └── SKILL.md             # linkedin skill (all linkedin actions in one file)
+│   │   ├── SKILL.md             # linkedin action index
+│   │   └── references/
+│   │       └── post-data.md     # one action spec + JS
 │   └── x.com/
-│       └── SKILL.md             # x (twitter) skill (all x actions in one file)
+│       ├── SKILL.md             # x (twitter) action index
+│       └── references/
+│           ├── post-data.md     # one action spec + JS
+│           ├── profile-data.md  # one action spec + JS
+│           └── search.md        # one action spec + JS
 ├── chrome-bridge/               # optional browser-access companion
 └── tools/                       # validation + umbrella regeneration
 ```
 
-A site's `SKILL.md` is a complete, standalone skill that covers every action available for that site — search, extract, post, etc. Adding a new action means editing that file, not creating a new one.
+A site's `SKILL.md` is a compact action index. Each action's requirements, navigation instructions, code block, and return shape live in a separate file under `skills/<domain>/references/`, so agents can load only the action they need. Adding a new action means updating the index and adding one action-specific reference file.
 
 ## Contributing
 
 To add a new supported site or improve an existing one:
 
 1. Fork the repo, create a branch.
-2. Add or edit `skills/<domain>/SKILL.md`.
+2. Add or edit `skills/<domain>/SKILL.md` and `skills/<domain>/references/*.md`.
 3. Test your code against a real page (via [chrome-bridge](./chrome-bridge) or any browser automation you have).
 4. Open a PR. CI validates frontmatter, JS syntax, and structure.
 5. On merge to main, the umbrella `SKILL.md`'s supported-site list regenerates automatically.
@@ -62,15 +68,26 @@ description: "Use when the user wants to interact with <site> — <list the acti
 
 # <site> — Browsing Skill
 
-Short intro explaining which actions are covered.
+Use this index to choose the <site> action that matches the user request, then open only the linked reference file for the complete navigation, requirements, code, and return shape.
+
+## Action Index
+
+- **<action-1>** — Short explanation of when to use this action. Full spec: [references/<action-1>.md](references/<action-1>.md).
+- **<action-2>** — Short explanation of when to use this action. Full spec: [references/<action-2>.md](references/<action-2>.md).
+```
+
+Put each full action specification in its own file under `skills/<domain>/references/`:
+
+````markdown
+# <site> — <action-1> Reference
 
 ## Requirements
 
 Auth notes, browser notes, cookie injection snippets, etc.
 
-## How to run any action
+## How to run this action
 
-Shared execution pattern (page.evaluate / chrome-bridge /wpm).
+Shared execution pattern (page.evaluate / chrome-bridge `/run-action`).
 
 ---
 
@@ -80,32 +97,27 @@ Shared execution pattern (page.evaluate / chrome-bridge /wpm).
 
 **Code:**
 
-​```js
+```js
 ({
   name: "<site>-<action-1>",
   description: "...",
   inputSchema: { ... },
   execute: function(params) { /* ... */ }
 })
-​```
+```
 
 **Returns:** `{ ... }`
-
----
-
-## Action: <action-2>
-
-...
-```
+````
 
 ### Conventions
 
-- **One SKILL.md per site.** All actions for that site live in one file, each as its own section with a ```js``` code block. This keeps each skill a standalone unit.
+- **One SKILL.md index per site.** The site `SKILL.md` lists available actions with short explanations and links to full specs under `references/`.
+- **One reference file per action.** Put navigation instructions, auth/browser requirements, the executable ```js``` block, and the return shape for one action in `skills/<domain>/references/<action>.md`.
 - **The `description` in frontmatter is the trigger.** Agent frameworks match user intent against it. Be specific about what the skill does and when.
-- **Skill code blocks** (`({ name, execute, ... })`) are validated by CI for JS syntax. Non-skill snippets (like cookie-injection examples) aren't validated — they're documentation.
+- **Action code blocks** (`({ name, execute, ... })`) are validated by CI for JS syntax. Non-action snippets (like cookie-injection examples) aren't validated — they're documentation.
 - **Use `var`** (not `let`/`const`) for maximum compatibility in any browser.
 - **Self-contained code** — no external imports, no CDN scripts.
-- **WebMCP format** — each action is an object with `name`, `description`, `inputSchema`, and an `execute(params)` function. It returns `{ content: [{ type: "text", text: ... }] }`.
+- **Action object format** — each action is an object with `name`, `description`, `inputSchema`, and an `execute(params)` function. It returns `{ content: [{ type: "text", text: ... }] }`.
 
 ### Reporting broken or missing skills
 

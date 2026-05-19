@@ -23,12 +23,10 @@ export function parseSkill(filePath) {
 
   const body = fmMatch[2];
 
-  // Find the last ```js ... ``` fenced block (the code)
+  // Find the last ```js ... ``` fenced block, when present. Site SKILL.md
+  // files are indexes; executable blocks usually live under references/.
   const codeMatches = [...body.matchAll(/```js\n([\s\S]*?)\n```/g)];
-  if (codeMatches.length === 0) {
-    throw new Error(`${filePath}: missing \`\`\`js code block`);
-  }
-  const jsCode = codeMatches[codeMatches.length - 1][1];
+  const jsCode = codeMatches.length > 0 ? codeMatches[codeMatches.length - 1][1] : null;
 
   return { frontmatter, body, jsCode };
 }

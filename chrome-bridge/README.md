@@ -16,7 +16,7 @@ You only need this if your agent doesn't already have browser access (e.g. via i
 
 1. The Chrome extension connects to a local WebSocket server.
 2. The bridge exposes HTTP endpoints on `127.0.0.1:7865`.
-3. Agent POSTs code (`/wpm` or `/eval`) → bridge forwards to extension → extension runs it in the active tab via Chrome Debugger Protocol → result streams back.
+3. Agent POSTs code (`/run-action` or `/eval`) → bridge forwards to extension → extension runs it in the active tab via Chrome Debugger Protocol → result streams back.
 
 ## Install
 
@@ -46,7 +46,7 @@ When the extension connects, the bridge server logs `[bridge] Extension connecte
 curl http://127.0.0.1:7865/tabs
 
 # Run a browsing-skills script in the active tab
-curl -X POST http://127.0.0.1:7865/wpm \
+curl -X POST http://127.0.0.1:7865/run-action \
   -H 'Content-Type: application/json' \
   -d '{"code": "({ execute: function() { return document.title; } })", "params": {}}'
 ```
@@ -56,7 +56,7 @@ curl -X POST http://127.0.0.1:7865/wpm \
 | Method | Path            | Purpose                                               |
 |--------|-----------------|-------------------------------------------------------|
 | GET    | `/tabs`         | List open tabs                                        |
-| POST   | `/wpm`          | Run a WebMCP script's `execute(params)` in a tab      |
+| POST   | `/run-action`   | Run an action object's `execute(params)` in a tab      |
 | POST   | `/eval`         | Run arbitrary JS expression                           |
 | POST   | `/navigate`     | Navigate a tab to a URL                               |
 | POST   | `/click`        | Click at x,y coordinates                              |
