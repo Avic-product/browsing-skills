@@ -6,6 +6,20 @@ Each supported website is packaged as a standard [SKILL.md](https://docs.anthrop
 
 > **Need browser access?** Most modern sites are JavaScript-rendered and require a real browser. Use your agent's browser integration, Playwright, or the optional [chrome-bridge/](./chrome-bridge) companion to run actions inside Chrome.
 
+## Supported Websites
+
+The library currently includes skills for:
+
+| Website | Skill |
+|---|---|
+| Airbnb | [`skills/airbnb.com`](./skills/airbnb.com) |
+| Booking.com | [`skills/booking.com`](./skills/booking.com) |
+| Facebook | [`skills/facebook.com`](./skills/facebook.com) |
+| LinkedIn | [`skills/linkedin.com`](./skills/linkedin.com) |
+| Reddit | [`skills/reddit.com`](./skills/reddit.com) |
+| TikTok | [`skills/tiktok.com`](./skills/tiktok.com) |
+| X | [`skills/x.com`](./skills/x.com) |
+
 ## Two ways to install
 
 ### A. The umbrella (I want all supported sites)
