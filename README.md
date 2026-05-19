@@ -23,15 +23,15 @@ We benchmark each action against a no-skill browser agent and track both **time*
 
 The library currently includes skills for:
 
-| Website | Skill |
-|---|---|
-| Reddit | [`skills/reddit.com`](./skills/reddit.com) |
-| X | [`skills/x.com`](./skills/x.com) |
-| LinkedIn | [`skills/linkedin.com`](./skills/linkedin.com) |
-| TikTok | [`skills/tiktok.com`](./skills/tiktok.com) |
-| Facebook | [`skills/facebook.com`](./skills/facebook.com) |
-| Booking.com | [`skills/booking.com`](./skills/booking.com) |
-| Airbnb | [`skills/airbnb.com`](./skills/airbnb.com) |
+| Website | Skill | Available actions |
+|---|---|---|
+| Reddit | [`skills/reddit.com`](./skills/reddit.com) | `subreddit-feed`, `search`, `post-thread`, `user-profile`, `current-user-list` |
+| X | [`skills/x.com`](./skills/x.com) | `search`, `post-data`, `profile-data` |
+| LinkedIn | [`skills/linkedin.com`](./skills/linkedin.com) | `post-data` |
+| TikTok | [`skills/tiktok.com`](./skills/tiktok.com) | `get-post-analytics`, `get-posts-list`, `download-post-video` |
+| Facebook | [`skills/facebook.com`](./skills/facebook.com) | `marketplace-search`, `marketplace-listing-data`, `marketplace-seller-data` |
+| Booking.com | [`skills/booking.com`](./skills/booking.com) | `search`, `hotel-data`, `reviews`, `book-room` |
+| Airbnb | [`skills/airbnb.com`](./skills/airbnb.com) | `search`, `listing-data`, `reviews`, `availability-price` |
 
 Browsing skills are most useful for web applications that do not expose the API an agent needs. Sometimes that is intentional, as with many social platforms; sometimes the product simply has an old, incomplete, or unavailable API. In those cases, the browser UI is the integration surface, and a skill turns that UI into a repeatable action.
 
