@@ -60,15 +60,17 @@ Example: `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview`
 ```js
 ({
   name: "tiktok-get-post-analytics",
-  description: "Extract visible TikTok Studio analytics for a single post",
+  description: "Extract visible TikTok Studio analytics for a single post, plus available network-backed hourly view history",
   inputSchema: {
     type: "object",
     properties: {
-      mode: { type: "string", enum: ["data", "display"], description: "Output mode. data returns JSON. display returns self-contained HTML." }
+      mode: { type: "string", enum: ["data", "display"], description: "Output mode. data returns JSON. display returns self-contained HTML." },
+      includeHourlyViews: { type: "boolean", description: "When true, also fetch the TikTok insight API request already loaded by the page and summarize hourly view history. Default true." }
     }
   },
-  execute: function(params) {
+  execute: async function(params) {
     var mode = (params && params.mode) || "data";
+    var includeHourlyViews = !params || params.includeHourlyViews !== false;
 
     function clean(text) {
       return (text || "").replace(/\s+/g, " ").trim();
@@ -274,6 +276,69 @@ Example: `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview`
       return points;
     }
 
+    function eChartPointValue(item) {
+      if (item === null || item === undefined) return "";
+      if (typeof item === "number") return item;
+      if (typeof item === "string") {
+        var stringNumber = Number(item);
+        return isNaN(stringNumber) ? item : stringNumber;
+      }
+      if (Array.isArray(item)) return item.length > 1 ? eChartPointValue(item[1]) : eChartPointValue(item[0]);
+      if (item.value !== undefined) return eChartPointValue(item.value);
+      return "";
+    }
+
+    function eChartLabelValue(item, index) {
+      if (item === null || item === undefined) return String(index);
+      if (typeof item === "string" || typeof item === "number") return String(item);
+      if (Array.isArray(item)) return item.length ? String(item[0]) : String(index);
+      if (item.value !== undefined) return String(item.value);
+      return String(index);
+    }
+
+    function extractOverviewViewChartFromECharts() {
+      var instances = window.eChartInstances || {};
+      var keys = Object.keys(instances);
+      for (var k = 0; k < keys.length; k++) {
+        var key = keys[k];
+        if (/retention|like/i.test(key)) continue;
+        var instance = instances[key];
+        if (!instance || typeof instance.getOption !== "function") continue;
+        var option;
+        try { option = instance.getOption(); } catch (e) { continue; }
+        var xData = option && option.xAxis && option.xAxis[0] && option.xAxis[0].data ? option.xAxis[0].data : [];
+        var yData = option && option.series && option.series[0] && option.series[0].data ? option.series[0].data : [];
+        if (!yData.length) continue;
+        var points = [];
+        var maxValue = 0;
+        var hasHourLabels = false;
+        for (var i = 0; i < yData.length; i++) {
+          var label = eChartLabelValue(xData[i], i);
+          var value = eChartPointValue(yData[i]);
+          var numeric = Number(value);
+          if (!isNaN(numeric) && numeric > maxValue) maxValue = numeric;
+          if (/\d+\s*h/i.test(label)) hasHourLabels = true;
+          points.push({ index: i, label: label, views: isNaN(numeric) ? value : numeric, raw: yData[i] });
+        }
+        if (points.length >= 6 && (hasHourLabels || maxValue > 1)) {
+          return { available: true, source: "echarts", instanceKey: key, points: points };
+        }
+      }
+      return { available: false, reason: "Overview views chart ECharts instance not found" };
+    }
+
+    function overviewViewChartFromHourlyViews(hourlyViews) {
+      if (!hourlyViews || !hourlyViews.available || !hourlyViews.hourly48 || !hourlyViews.hourly48.length) return { available: false, reason: "Hourly view history unavailable" };
+      return {
+        available: true,
+        source: "insightApi",
+        note: "This is the data behind the Overview page Video views chart. Hour 0 is the launch-hour bucket and may be partial.",
+        points: hourlyViews.hourly48.slice(0, 25).map(function(point) {
+          return { index: point.hour, label: point.hour + "h", hour: point.hour, views: point.views };
+        })
+      };
+    }
+
     function valueAfterLine(lines, label) {
       var target = label.toLowerCase();
       for (var i = 0; i < lines.length; i++) {
@@ -404,7 +469,131 @@ Example: `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview`
       return out;
     }
 
+    function numericValue(item) {
+      if (item === null || item === undefined) return 0;
+      if (typeof item === "number") return item;
+      if (typeof item.value === "number") return item.value;
+      if (item.value && typeof item.value.value === "number") return item.value.value;
+      var n = Number(item.value);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function listValues(list) {
+      if (!Array.isArray(list)) return [];
+      var out = [];
+      for (var i = 0; i < list.length; i++) out.push(numericValue(list[i]));
+      return out;
+    }
+
+    function sum(values, start, endExclusive) {
+      var total = 0;
+      for (var i = start; i < values.length && i < endExclusive; i++) total += values[i] || 0;
+      return total;
+    }
+
+    function percent(part, total) {
+      return total ? Math.round((part / total) * 1000) / 10 : 0;
+    }
+
+    function summarizeHourlyViews(rawInsight) {
+      var hourly48 = listValues(rawInsight && rawInsight.video_vv_history_48_hours);
+      var daily7 = listValues(rawInsight && rawInsight.video_vv_history_7d);
+      var realtime = rawInsight && rawInsight.realtime_video_view_history && Array.isArray(rawInsight.realtime_video_view_history.list)
+        ? rawInsight.realtime_video_view_history.list.map(function(item, index) {
+            return { index: index, key: item.key || "", views: numericValue(item) };
+          })
+        : [];
+      var total48 = sum(hourly48, 0, hourly48.length);
+      var launchHour = hourly48[0] || 0;
+      var first2Hours = sum(hourly48, 0, 2);
+      var first3Hours = sum(hourly48, 0, 3);
+      var first6Hours = sum(hourly48, 0, 6);
+      var first24Hours = sum(hourly48, 0, 24);
+      var peakHourIndex = -1;
+      var peakHourViews = 0;
+      for (var i = 0; i < hourly48.length; i++) {
+        if (hourly48[i] > peakHourViews) {
+          peakHourViews = hourly48[i];
+          peakHourIndex = i;
+        }
+      }
+      return {
+        available: hourly48.length > 0 || realtime.length > 0,
+        note: "Hour 0 is TikTok's launch-hour bucket and may be a partial clock hour depending on post time.",
+        total48Hours: total48,
+        launchHourViews: launchHour,
+        first2HoursViews: first2Hours,
+        first3HoursViews: first3Hours,
+        first6HoursViews: first6Hours,
+        first24HoursViews: first24Hours,
+        after24HoursViews: Math.max(0, total48 - first24Hours),
+        launchHourShare: percent(launchHour, total48),
+        first2HoursShare: percent(first2Hours, total48),
+        first3HoursShare: percent(first3Hours, total48),
+        first6HoursShare: percent(first6Hours, total48),
+        first24HoursShare: percent(first24Hours, total48),
+        after24HoursShare: percent(Math.max(0, total48 - first24Hours), total48),
+        peakHourIndex: peakHourIndex,
+        peakHourViews: peakHourViews,
+        hourly48: hourly48.map(function(views, index) { return { hour: index, views: views }; }),
+        daily7: daily7.map(function(views, index) { return { day: index, views: views }; }),
+        realtimeVideoViewHistory: realtime
+      };
+    }
+
+    async function extractHourlyViews() {
+      if (!includeHourlyViews) return { available: false, reason: "Disabled by includeHourlyViews=false" };
+      var postId = getPostId();
+      if (!postId) return { available: false, reason: "Post ID not found in URL" };
+      var resources = performance.getEntriesByType("resource").map(function(entry) { return entry.name || ""; });
+      var urls = [];
+      for (var i = 0; i < resources.length; i++) {
+        if (resources[i].indexOf("/aweme/v2/data/insight/") >= 0 && resources[i].indexOf(postId) >= 0) urls.push(resources[i]);
+      }
+      var preferred = [];
+      for (var p = 0; p < urls.length; p++) {
+        if (urls[p].indexOf("video_vv_history_48_hours") >= 0 || urls[p].indexOf("realtime_video_view_history") >= 0) preferred.push(urls[p]);
+      }
+      var url = (preferred.length ? preferred : urls).slice(-1)[0];
+      if (!url) return { available: false, reason: "TikTok insight API request not found in performance resources. Reload the overview page and wait for analytics charts to load, then run again." };
+      try {
+        var response = await fetch(url, { credentials: "include", cache: "force-cache" });
+        var raw = await response.json();
+        var summary = summarizeHourlyViews(raw);
+        summary.sourceUrl = url;
+        summary.fetchStatus = response.status;
+        return summary;
+      } catch (err) {
+        return { available: false, reason: err && err.message ? err.message : String(err), sourceUrl: url };
+      }
+    }
+
     var bodyText = clean(document.body.innerText || document.body.textContent || "");
+    var summaryMetrics = extractSummaryMetrics();
+    var hourlyViews = await extractHourlyViews();
+    var overviewViewChart = extractOverviewViewChartFromECharts();
+    if (!overviewViewChart.available) overviewViewChart = overviewViewChartFromHourlyViews(hourlyViews);
+    if (hourlyViews && hourlyViews.available) {
+      summaryMetrics.hourlyViewVelocity = {
+        label: "Hourly view velocity",
+        value: "First 3 hourly buckets: " + hourlyViews.first3HoursViews + " (" + hourlyViews.first3HoursShare + "%); first 6: " + hourlyViews.first6HoursViews + " (" + hourlyViews.first6HoursShare + "%)",
+        total48Hours: hourlyViews.total48Hours,
+        launchHourViews: hourlyViews.launchHourViews,
+        first2HoursViews: hourlyViews.first2HoursViews,
+        first3HoursViews: hourlyViews.first3HoursViews,
+        first6HoursViews: hourlyViews.first6HoursViews,
+        first24HoursViews: hourlyViews.first24HoursViews,
+        after24HoursViews: hourlyViews.after24HoursViews,
+        launchHourShare: hourlyViews.launchHourShare,
+        first2HoursShare: hourlyViews.first2HoursShare,
+        first3HoursShare: hourlyViews.first3HoursShare,
+        first6HoursShare: hourlyViews.first6HoursShare,
+        first24HoursShare: hourlyViews.first24HoursShare,
+        after24HoursShare: hourlyViews.after24HoursShare,
+        peakHourIndex: hourlyViews.peakHourIndex,
+        peakHourViews: hourlyViews.peakHourViews
+      };
+    }
     var data = {
       url: window.location.href,
       capturedAt: new Date().toISOString(),
@@ -413,13 +602,15 @@ Example: `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview`
       authenticated: !/log in|login|sign up|continue with/i.test(bodyText),
       pageRecognized: /TikTok Studio|Video views|Total play time|Retention rate|Traffic source|Watched full video|Total viewers|Viewer types|Top words used in comments|Most viewers liked/i.test(bodyText),
       post: extractPostCard(),
-      summaryMetrics: extractSummaryMetrics(),
+      summaryMetrics: summaryMetrics,
       retentionRate: extractRetention(),
       retentionCurve: extractRetentionCurve(),
       viewers: currentTab() === "viewers" ? extractViewersTab() : null,
       engagement: currentTab() === "engagement" ? extractEngagementTab() : null,
       trafficSources: extractTrafficSources(),
       searchQueries: extractSearchQueries(),
+      overviewViewChart: overviewViewChart,
+      hourlyViews: hourlyViews,
       visibleChartLabels: extractVisibleChartLabels(),
       sidebarPosts: extractSidebarPosts(),
       rawText: bodyText
@@ -446,6 +637,18 @@ Example: `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview`
         if (data.retentionRate.note) h += "<p>" + data.retentionRate.note + "</p>";
         if (data.retentionCurve.length) h += "<div style='color:#666;font-size:13px;'>" + data.retentionCurve.length + " retention points extracted</div>";
       }
+      if (data.hourlyViews && data.hourlyViews.available) {
+        h += "<h3 style='font-size:16px;margin:18px 0 6px;'>Hourly views</h3>";
+        h += "<ul>";
+        h += "<li><strong>Launch hour:</strong> " + data.hourlyViews.launchHourViews + " (" + data.hourlyViews.launchHourShare + "% of 48h views)</li>";
+        h += "<li><strong>First 3 hourly buckets:</strong> " + data.hourlyViews.first3HoursViews + " (" + data.hourlyViews.first3HoursShare + "%)</li>";
+        h += "<li><strong>First 6 hourly buckets:</strong> " + data.hourlyViews.first6HoursViews + " (" + data.hourlyViews.first6HoursShare + "%)</li>";
+        h += "<li><strong>After 24h:</strong> " + data.hourlyViews.after24HoursViews + " (" + data.hourlyViews.after24HoursShare + "%)</li>";
+        h += "</ul>";
+      }
+      if (data.overviewViewChart && data.overviewViewChart.available) {
+        h += "<div style='color:#666;font-size:13px;'>" + data.overviewViewChart.points.length + " overview Video views chart points extracted from " + data.overviewViewChart.source + "</div>";
+      }
       if (data.viewers) {
         h += "<h3 style='font-size:16px;margin:18px 0 6px;'>Viewers</h3>";
         h += "<div>Total viewers: " + (data.viewers.totalViewers || "") + "</div>";
@@ -464,4 +667,4 @@ Example: `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview`
 })
 ```
 
-**Returns:** `{ url, capturedAt, postId, tab, authenticated, pageRecognized, post: { title, postedOn, thumbnailUrl, engagement }, summaryMetrics, retentionRate, retentionCurve: [{ second, percent, retentionRate, raw }], viewers, engagement, trafficSources, searchQueries, visibleChartLabels, sidebarPosts, rawText }`
+**Returns:** `{ url, capturedAt, postId, tab, authenticated, pageRecognized, post: { title, postedOn, thumbnailUrl, engagement }, summaryMetrics: { videoViews, totalPlayTime, averageWatchTime, watchedFullVideo, newFollowers, hourlyViewVelocity }, retentionRate, retentionCurve: [{ second, percent, retentionRate, raw }], overviewViewChart: { available, source, points: [{ index, label, hour, views, raw }] }, hourlyViews: { available, note, total48Hours, launchHourViews, first2HoursViews, first3HoursViews, first6HoursViews, first24HoursViews, after24HoursViews, launchHourShare, first2HoursShare, first3HoursShare, first6HoursShare, first24HoursShare, after24HoursShare, peakHourIndex, peakHourViews, hourly48: [{ hour, views }], daily7: [{ day, views }], realtimeVideoViewHistory: [{ index, key, views }], sourceUrl, fetchStatus }, viewers, engagement, trafficSources, searchQueries, visibleChartLabels, sidebarPosts, rawText }`
