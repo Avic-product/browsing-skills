@@ -1,10 +1,8 @@
-# browsing-skills
+# Browsing Skills: turn website actions into structured APIs
 
-An open-source library of **website-specific browser automation skills** for AI agents.
+Make your AI agent call web application actions like APIs, even when the website does not expose the API you need.
 
-Each supported website is packaged as a standard [SKILL.md](https://docs.anthropic.com/en/docs/agents/skills) skill. Agents can install the whole library through the umbrella skill, or install a single site skill when they only need one website.
-
-> **Need browser access?** Most modern sites are JavaScript-rendered and require a real browser. Use your agent's browser integration, Playwright, or the optional [chrome-bridge/](./chrome-bridge) companion to run actions inside Chrome.
+`browsing-skills` is an open-source library of **website-specific browser actions** for AI agents. Each supported website is packaged as a standard [SKILL.md](https://docs.anthropic.com/en/docs/agents/skills) skill with focused actions, documented inputs, and structured outputs.
 
 ## Why
 
@@ -80,6 +78,8 @@ browsing-skills/
 A site's `SKILL.md` is a compact action index. Each action's requirements, navigation instructions, code block, and return shape live in a separate file under `skills/<domain>/references/`, so agents can load only the action they need. Adding a new action means updating the index and adding one action-specific reference file.
 
 ## How actions run
+
+Most modern sites are JavaScript-rendered and require a real browser. Use your agent's browser integration, Playwright, or the optional [chrome-bridge/](./chrome-bridge) companion to run actions inside Chrome.
 
 Reference files contain self-contained JavaScript action objects. Once the target page is loaded, run the action in the page context with `page.evaluate()` or Chrome Bridge's `/run-action` endpoint:
 
