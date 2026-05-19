@@ -168,6 +168,16 @@ Shared execution pattern (page.evaluate / chrome-bridge `/run-action`).
 - Keep examples generic. If an action requires authentication, document the requirement without including real account data.
 - Chrome Bridge runs code in real browser tabs. Review action code before running it on logged-in sessions, and keep write actions explicitly opt-in.
 
+## Responsible Use
+
+This project provides code and documentation for browser automation. You are responsible for how you use it.
+
+- Follow the terms of service, robots policies, rate limits, and other rules of any website you access.
+- Only automate accounts, pages, and data you are authorized to use.
+- Do not use these skills to bypass access controls, paywalls, security controls, or privacy settings.
+- Be careful with logged-in sessions. Automated browsing can trigger fraud, abuse, or bot-detection systems, and websites may restrict, suspend, or block accounts.
+- The maintainers are not responsible for account restrictions, data access issues, legal claims, or other consequences from your use of these skills or Chrome Bridge.
+
 ### Reporting broken or missing skills
 
 Open a [GitHub issue](https://github.com/browsing-skills/browsing-skills/issues/new/choose) using one of the templates:
