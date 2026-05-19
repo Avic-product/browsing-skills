@@ -8,9 +8,16 @@ Each supported website is packaged as a standard [SKILL.md](https://docs.anthrop
 
 ## Why
 
-General browser agents can use any website, but they often spend a lot of time and context rediscovering the same page structure: inspecting DOM snippets, guessing selectors, running extraction code, and repairing mistakes. This library packages that site knowledge once, as small action references agents can load only when needed. With a skill, the agent does not need to research the live DOM or invent selectors; after navigating to the right page, it can run the maintained action code in one page-context execution call (`page.evaluate()` or Chrome Bridge `/run-action`).
+Have you ever tried to point an AI agent at a web app you use every day, only to watch it crawl through the page, inspect huge DOM dumps, guess selectors, miss fields, and burn tokens?
 
-We benchmark each action against a no-skill browser agent and track both **time** and **tokens** in [BENCHMARKS.md](./BENCHMARKS.md). In one Booking.com search benchmark, the skill path used **3,903 tokens** and finished in **~9.5s**, while the no-skill DOM-inspection loop used **49,290 tokens** and took **~82.5s**. The skill also returned cleaner structured result cards, while the no-skill run was noisier and missed fields.
+Browsing skills make common web actions fast and repeatable:
+
+- **No selector research loop.** The agent loads the right action reference instead of rediscovering the page from scratch.
+- **One page execution call.** After navigation, the agent runs maintained action code with `page.evaluate()` or Chrome Bridge `/run-action`.
+- **Lower token and time cost.** Less DOM reading, fewer repair loops, fewer failed extraction attempts.
+- **Cleaner results.** Actions return structured data in a predictable shape.
+
+We benchmark each action against a no-skill browser agent and track both **time** and **tokens** in [BENCHMARKS.md](./BENCHMARKS.md). In one Booking.com search benchmark, the skill path used **3,903 tokens** and finished in **~9.5s**; the no-skill DOM-inspection loop used **49,290 tokens** and took **~82.5s**.
 
 ## Supported Websites
 
