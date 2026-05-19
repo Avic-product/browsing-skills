@@ -6,6 +6,12 @@ Each supported website is packaged as a standard [SKILL.md](https://docs.anthrop
 
 > **Need browser access?** Most modern sites are JavaScript-rendered and require a real browser. Use your agent's browser integration, Playwright, or the optional [chrome-bridge/](./chrome-bridge) companion to run actions inside Chrome.
 
+## Why
+
+General browser agents can use any website, but they often spend a lot of time and context rediscovering the same page structure: inspecting DOM snippets, guessing selectors, running extraction code, and repairing mistakes. This library packages that site knowledge once, as small action references agents can load only when needed.
+
+We benchmark each action against a no-skill browser agent and track both **time** and **tokens** in [BENCHMARKS.md](./BENCHMARKS.md). In one Booking.com search benchmark, the skill path used **3,903 tokens** and finished in **~9.5s**, while the no-skill DOM-inspection loop used **49,290 tokens** and took **~82.5s**. The skill also returned cleaner structured result cards, while the no-skill run was noisier and missed fields.
+
 ## Supported Websites
 
 The library currently includes skills for:
