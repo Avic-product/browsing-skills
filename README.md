@@ -26,6 +26,8 @@ The library currently includes skills for:
 | Booking.com | [`skills/booking.com`](./skills/booking.com) |
 | Airbnb | [`skills/airbnb.com`](./skills/airbnb.com) |
 
+Browsing skills are most useful for web applications that do not expose the API an agent needs. Sometimes that is intentional, as with many social platforms; sometimes the product simply has an old, incomplete, or unavailable API. In those cases, the browser UI is the integration surface, and a skill turns that UI into a repeatable action.
+
 ## Two ways to install
 
 ### A. The umbrella (I want all supported sites)
