@@ -11,7 +11,7 @@ await context.addCookies([{
 }]);
 ```
 
-**Browser:** A real (non-headless) browser is required. If you have browser access (Playwright, a built-in integration, etc.), use it. Otherwise ask the user to install the [Chrome Bridge](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion.
+**Browser:** A real (non-headless) browser is required. If you have browser access (Playwright, a built-in integration, etc.), use it. Otherwise ask the user to install the [Chrome Bridge](https://github.com/browsing-skills/browsing-skills/tree/main/chrome-bridge) companion.
 
 ## How to run this action
 
@@ -102,7 +102,7 @@ Use when the user wants info about a specific X user (bio, followers, etc.). Req
 
 ## Reporting issues
 
-If one of these actions breaks (selectors changed, X updated their UI), file an issue: https://github.com/tomer-van-cohen/browsing-skills/issues/new/choose
+If one of these actions breaks (selectors changed, X updated their UI), file an issue: https://github.com/browsing-skills/browsing-skills/issues/new/choose
 
 ## Benchmark
 

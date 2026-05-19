@@ -151,9 +151,9 @@ Notes:
   - `skills/tiktok.com/references/get-post-analytics.md`
 - **Targets:**
   - `https://www.tiktok.com/tiktokstudio/content`
-  - `https://www.tiktok.com/tiktokstudio/analytics/7637083025620094230/overview`
-  - `https://www.tiktok.com/tiktokstudio/analytics/7637083025620094230/viewers`
-  - `https://www.tiktok.com/tiktokstudio/analytics/7637083025620094230/engagement`
+  - `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview`
+  - `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/viewers`
+  - `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/engagement`
 - **Goal:** Compare maintained TikTok Studio actions against a no-skill DOM-inspection path on logged-in creator pages.
 - **Browser layer:** Chrome Bridge on `POST /run-action` in the user's already-authenticated Chrome session.
 
@@ -172,7 +172,7 @@ Initial skill-vs-no-skill proxy benchmark, May 15, 2026:
 
 Observed result quality:
 
-- **Posts list:** recognized authenticated Studio content page, saw `Posts 10` / `Drafts 0`, and extracted 7 currently visible virtualized rows in the benchmark viewport. Fields included post ID, public video URL, duration, caption, pinned flag, created time, privacy, views, likes, comments, and thumbnail URL.
+- **Posts list:** recognized an authenticated Studio content page and extracted the currently visible virtualized rows in the benchmark viewport. Fields included post ID, public video URL, duration, caption, pinned flag, created time, privacy, views, likes, comments, and thumbnail URL.
 - **Overview:** extracted 5 summary metrics, 20 retention-curve points, and 7 traffic-source rows.
 - **Viewers:** extracted total viewers, new vs returning viewers, followers vs non-followers, 5 age rows, 3 gender rows, and 11 location rows.
 - **Engagement:** extracted the likes note, 20 like-timing curve points, and the "not enough data" state for top words used in comments.

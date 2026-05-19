@@ -4,7 +4,7 @@
 
 **Auth:** TikTok Studio content management requires a logged-in creator account. Run this action in an already-authenticated browser session. Do not paste or commit auth cookies/session data.
 
-**Browser:** Required. Use Playwright with a persistent signed-in Chrome profile, a built-in browser integration, or the [Chrome Bridge](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion to execute inside the user's real signed-in Chrome session.
+**Browser:** Required. Use Playwright with a persistent signed-in Chrome profile, a built-in browser integration, or the [Chrome Bridge](https://github.com/browsing-skills/browsing-skills/tree/main/chrome-bridge) companion to execute inside the user's real signed-in Chrome session.
 
 **Scope:** This action only reads the currently visible posts table. It does not click rows, open menus, edit posts, delete posts, promote posts, download media, or scroll aggressively. If more rows are needed, manually scroll/load the page first, then run the action.
 

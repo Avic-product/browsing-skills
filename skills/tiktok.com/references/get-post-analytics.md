@@ -4,7 +4,7 @@
 
 **Auth:** TikTok Studio analytics require a logged-in creator account that has access to the target post. Run this action in an already-authenticated browser session. The `__tea_session_id_*` and `STM_TAB_ID_KEY` values sometimes visible in browser storage are telemetry/session-storage values and are not enough by themselves; in an isolated Playwright browser they redirect to TikTok login.
 
-**Browser:** Required. Use Playwright with a persistent signed-in Chrome profile, a built-in browser integration, or the [Chrome Bridge](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion to execute inside the user's real signed-in Chrome session.
+**Browser:** Required. Use Playwright with a persistent signed-in Chrome profile, a built-in browser integration, or the [Chrome Bridge](https://github.com/browsing-skills/browsing-skills/tree/main/chrome-bridge) companion to execute inside the user's real signed-in Chrome session.
 
 **Scope:** This action reads the currently visible TikTok Studio analytics page. It does not change tabs, edit the post, download media, message users, or perform account actions. If the user needs data from the Viewers or Engagement tabs, navigate to that tab first or extend this action later to click tabs deliberately.
 
@@ -22,7 +22,7 @@ var context = await chromium.launchPersistentContext("/path/to/signed-in/chrome-
 });
 
 var page = await context.newPage();
-await page.goto("https://www.tiktok.com/tiktokstudio/analytics/7637083025620094230/overview", {
+await page.goto("https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview", {
   waitUntil: "domcontentloaded"
 });
 await page.waitForTimeout(8000);
@@ -53,7 +53,7 @@ Use when the user wants all visible analytics from a TikTok Studio post analytic
 
 **Navigate to:** `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview`
 
-Example: `https://www.tiktok.com/tiktokstudio/analytics/7637083025620094230/overview`
+Example: `https://www.tiktok.com/tiktokstudio/analytics/<post-id>/overview`
 
 **Code:**
 

@@ -1,8 +1,10 @@
 # browsing-skills
 
-An open-source library of **per-website browser-automation skills** for AI agents. Each supported site is a first-class skill in standard [SKILL.md](https://docs.anthropic.com/en/docs/agents/skills) format — installable on its own or together as a bundle.
+An open-source library of **website-specific browser automation skills** for AI agents.
 
-> **No browser?** If your agent doesn't already have browser access, see the optional [chrome-bridge/](./chrome-bridge) companion — a tiny Chrome extension + local bridge that lets any agent run skills in your real Chrome tabs.
+Each supported website is packaged as a standard [SKILL.md](https://docs.anthropic.com/en/docs/agents/skills) skill. Agents can install the whole library through the umbrella skill, or install a single site skill when they only need one website.
+
+> **Need browser access?** Most modern sites are JavaScript-rendered and require a real browser. Use your agent's browser integration, Playwright, or the optional [chrome-bridge/](./chrome-bridge) companion to run actions inside Chrome.
 
 ## Two ways to install
 
@@ -11,7 +13,7 @@ An open-source library of **per-website browser-automation skills** for AI agent
 Point your agent at the top-level [`SKILL.md`](./SKILL.md). It tells the agent which sites are supported and how to load each site's skill on demand:
 
 ```
-https://raw.githubusercontent.com/tomer-van-cohen/browsing-skills/main/SKILL.md
+https://raw.githubusercontent.com/browsing-skills/browsing-skills/main/SKILL.md
 ```
 
 This is the right choice if your agent might interact with any of the supported sites.
@@ -21,7 +23,7 @@ This is the right choice if your agent might interact with any of the supported 
 If you're building an agent that only ever works with one site, skip the umbrella — install that site's SKILL.md directly. For example, a LinkedIn-only agent:
 
 ```
-https://raw.githubusercontent.com/tomer-van-cohen/browsing-skills/main/skills/linkedin.com/SKILL.md
+https://raw.githubusercontent.com/browsing-skills/browsing-skills/main/skills/linkedin.com/SKILL.md
 ```
 
 This is leaner — no list of unrelated sites, no routing step. Each site is a complete, standalone skill.
@@ -47,6 +49,25 @@ browsing-skills/
 ```
 
 A site's `SKILL.md` is a compact action index. Each action's requirements, navigation instructions, code block, and return shape live in a separate file under `skills/<domain>/references/`, so agents can load only the action they need. Adding a new action means updating the index and adding one action-specific reference file.
+
+## How actions run
+
+Reference files contain self-contained JavaScript action objects. Once the target page is loaded, run the action in the page context with `page.evaluate()` or Chrome Bridge's `/run-action` endpoint:
+
+```js
+var result = await page.evaluate(async function(code) {
+  var tool = eval(code);
+  return await tool.execute({ mode: "data" });
+}, scriptCode);
+```
+
+Actions return:
+
+```js
+{ content: [{ type: "text", text: "..." }] }
+```
+
+The `text` value is usually JSON, but some actions also support `mode: "display"` for self-contained HTML output.
 
 ## Contributing
 
@@ -119,9 +140,15 @@ Shared execution pattern (page.evaluate / chrome-bridge `/run-action`).
 - **Self-contained code** — no external imports, no CDN scripts.
 - **Action object format** — each action is an object with `name`, `description`, `inputSchema`, and an `execute(params)` function. It returns `{ content: [{ type: "text", text: ... }] }`.
 
+### Security and privacy
+
+- Do not commit cookies, API keys, session tokens, or personal browser profile paths.
+- Keep examples generic. If an action requires authentication, document the requirement without including real account data.
+- Chrome Bridge runs code in real browser tabs. Review action code before running it on logged-in sessions, and keep write actions explicitly opt-in.
+
 ### Reporting broken or missing skills
 
-Open a [GitHub issue](https://github.com/tomer-van-cohen/browsing-skills/issues/new/choose) using one of the templates:
+Open a [GitHub issue](https://github.com/browsing-skills/browsing-skills/issues/new/choose) using one of the templates:
 - **skill-broken** — a skill stopped working
 - **skill-request** — a site not yet covered
 - **skill-enhancement** — existing skill needs more actions or fields

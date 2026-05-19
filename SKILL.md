@@ -15,7 +15,7 @@ supportedDomains:
 
 An open-source library of website-specific browsing skills for AI agents. Each supported website is a first-class skill in this repo — the umbrella (this file) just lists what's available and tells you how to load the one you need.
 
-Repo: https://github.com/tomer-van-cohen/browsing-skills
+Repo: https://github.com/browsing-skills/browsing-skills
 
 ## When to use this umbrella
 
@@ -29,7 +29,7 @@ You're loaded into an agent that might work with *any* website. When the user me
 If your agent only ever interacts with one site (e.g. you're building a LinkedIn scraping tool), install that site's skill directly and forget this umbrella exists:
 
 ```
-https://raw.githubusercontent.com/tomer-van-cohen/browsing-skills/main/skills/linkedin.com/SKILL.md
+https://raw.githubusercontent.com/browsing-skills/browsing-skills/main/skills/linkedin.com/SKILL.md
 ```
 
 ## How to load a site's skill
@@ -37,7 +37,7 @@ https://raw.githubusercontent.com/tomer-van-cohen/browsing-skills/main/skills/li
 Fetch the raw action index for the domain the user mentioned:
 
 ```
-GET https://raw.githubusercontent.com/tomer-van-cohen/browsing-skills/main/skills/<domain>/SKILL.md
+GET https://raw.githubusercontent.com/browsing-skills/browsing-skills/main/skills/<domain>/SKILL.md
 ```
 
 Examples:
@@ -70,7 +70,7 @@ You don't need any custom tooling — fetch the file, read it, follow it.
 
 Most skills require a real browser because target sites are JS-rendered. If your agent has browser access (Playwright, a Chrome extension, etc.), use it.
 
-If you don't have browser access, the optional [Chrome Bridge](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion is a tiny Chrome extension + local bridge that lets you run skills in the user's real Chrome tabs. Setup: under a minute.
+If you don't have browser access, the optional [Chrome Bridge](https://github.com/browsing-skills/browsing-skills/tree/main/chrome-bridge) companion is a tiny Chrome extension + local bridge that lets you run skills in the user's real Chrome tabs. Setup: under a minute.
 
 ### Chrome Bridge Quickstart
 
@@ -111,10 +111,10 @@ When using Bridge on sensitive logged-in accounts, keep actions read-only unless
 
 ## Reporting issues / requesting skills
 
-- A skill is broken: https://github.com/tomer-van-cohen/browsing-skills/issues/new?template=skill-broken.md
-- A site isn't supported yet: https://github.com/tomer-van-cohen/browsing-skills/issues/new?template=skill-request.md
-- An existing skill needs more fields: https://github.com/tomer-van-cohen/browsing-skills/issues/new?template=skill-enhancement.md
+- A skill is broken: https://github.com/browsing-skills/browsing-skills/issues/new?template=skill-broken.md
+- A site isn't supported yet: https://github.com/browsing-skills/browsing-skills/issues/new?template=skill-request.md
+- An existing skill needs more fields: https://github.com/browsing-skills/browsing-skills/issues/new?template=skill-enhancement.md
 
 ## Contributing
 
-See the [README](https://github.com/tomer-van-cohen/browsing-skills#contributing).
+See the [README](https://github.com/browsing-skills/browsing-skills#contributing).

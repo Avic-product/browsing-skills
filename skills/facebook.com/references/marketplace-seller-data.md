@@ -4,7 +4,7 @@
 
 **Auth:** A signed-in Facebook session is required for most Marketplace seller/profile pages. Use a real browser profile that is already logged in to facebook.com.
 
-**Browser:** A real browser is required. If your agent does not have browser access, ask the user to install the [Chrome Bridge](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion and run the action in the user's existing Chrome session.
+**Browser:** A real browser is required. If your agent does not have browser access, ask the user to install the [Chrome Bridge](https://github.com/browsing-skills/browsing-skills/tree/main/chrome-bridge) companion and run the action in the user's existing Chrome session.
 
 **Privacy:** Only extract information visible to the signed-in user. Do not bypass privacy controls or request hidden contact details.
 

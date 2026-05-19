@@ -2,7 +2,7 @@
 
 ## Requirements
 
-**Browser:** Required. Airbnb search pages are JavaScript-rendered and the useful listing cards usually appear after hydration. Use Playwright, a built-in Chromium integration, or the [Chrome Bridge](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion.
+**Browser:** Required. Airbnb search pages are JavaScript-rendered and the useful listing cards usually appear after hydration. Use Playwright, a built-in Chromium integration, or the [Chrome Bridge](https://github.com/browsing-skills/browsing-skills/tree/main/chrome-bridge) companion.
 
 **Login:** Not required for normal public stay search. Logged-in sessions may show personalized results, saved-list buttons, or different prices, but this action reads only visible public result cards.
 

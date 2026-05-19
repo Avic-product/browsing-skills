@@ -4,7 +4,7 @@
 
 **Auth:** Public TikTok post pages may work without login. TikTok Studio analytics pages require a logged-in creator account that has access to the target post. Run this action in an already-authenticated browser session. Do not paste or commit auth cookies/session data.
 
-**Browser:** Required. Use Playwright with a persistent signed-in Chrome profile, a built-in browser integration, or the [Chrome Bridge](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion to execute inside the user's real signed-in Chrome session.
+**Browser:** Required. Use Playwright with a persistent signed-in Chrome profile, a built-in browser integration, or the [Chrome Bridge](https://github.com/browsing-skills/browsing-skills/tree/main/chrome-bridge) companion to execute inside the user's real signed-in Chrome session.
 
 **Scope:** This action reads the currently loaded TikTok page and optionally triggers a browser download for the visible playable video. It does not edit the post, delete media, publish, message users, follow accounts, or perform account-management actions.
 

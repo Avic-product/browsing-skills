@@ -161,7 +161,7 @@ Use `mode: "display"` for self-contained HTML output.
 
 ## Reporting issues
 
-If this breaks (LinkedIn changes their JSON-LD or DOM), file an issue: https://github.com/tomer-van-cohen/browsing-skills/issues/new/choose
+If this breaks (LinkedIn changes their JSON-LD or DOM), file an issue: https://github.com/browsing-skills/browsing-skills/issues/new/choose
 
 ## Benchmark
 

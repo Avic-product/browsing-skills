@@ -4,7 +4,7 @@
 
 **Auth:** A signed-in Facebook session is required for most Marketplace pages. Use a real browser profile that is already logged in to facebook.com. Cookie injection is not recommended because Facebook uses multiple session cookies, device/session checks, and sometimes interactive challenges.
 
-**Browser:** A real browser is required. If your agent does not have browser access, ask the user to install the [Chrome Bridge](https://github.com/tomer-van-cohen/browsing-skills/tree/main/chrome-bridge) companion and run the action in the user's existing Chrome session.
+**Browser:** A real browser is required. If your agent does not have browser access, ask the user to install the [Chrome Bridge](https://github.com/browsing-skills/browsing-skills/tree/main/chrome-bridge) companion and run the action in the user's existing Chrome session.
 
 **Safety:** This action only reads visible search results. It does not click listings, message sellers, save items, or purchase anything.
 
