@@ -2,6 +2,7 @@ import { WebSocketServer } from 'ws';
 import http from 'http';
 
 const PORT = 7865;
+const MAX_BODY_BYTES = 1024 * 1024;
 let extensionWs = null;
 const pending = new Map();
 let nextId = 1;
@@ -9,6 +10,13 @@ let nextId = 1;
 // HTTP server for Claude to call via curl
 const httpServer = http.createServer(async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-store');
+
+  if (isBrowserOriginRequest(req)) {
+    res.writeHead(403);
+    res.end(JSON.stringify({ error: 'Browser-origin requests are not allowed' }));
+    return;
+  }
 
   if (!extensionWs || extensionWs.readyState !== 1) {
     res.writeHead(503);
@@ -24,7 +32,13 @@ const httpServer = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && ['/eval', '/run-action', '/navigate', '/type', '/click', '/cdp', '/evalInFrame', '/reload'].includes(req.url)) {
-    const body = await readBody(req);
+    const bodyResult = await readBody(req);
+    if (!bodyResult.ok) {
+      res.writeHead(bodyResult.status);
+      res.end(JSON.stringify({ error: bodyResult.error }));
+      return;
+    }
+    const body = bodyResult.body;
     const action = req.url === '/run-action' ? 'runAction' : req.url.slice(1);
     const result = await sendToExtension({ action, ...body });
     res.writeHead(result.ok ? 200 : 500);
@@ -36,13 +50,53 @@ const httpServer = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ error: 'Not found' }));
 });
 
+function isBrowserOriginRequest(req) {
+  const origin = req.headers.origin || '';
+  const fetchSite = req.headers['sec-fetch-site'] || '';
+
+  // Local CLI/agent calls do not send Origin. Browser pages do, even for
+  // no-cors simple POSTs. Reject them to prevent websites from driving the
+  // localhost bridge and executing code in the user's active Chrome tab.
+  if (origin) return true;
+  if (fetchSite && fetchSite !== 'none' && fetchSite !== 'same-origin') return true;
+  return false;
+}
+
+function isForbiddenWebSocketOrigin(req) {
+  const origin = req.headers.origin || '';
+
+  // Chrome extension WebSocket connections use a chrome-extension:// origin.
+  // Web pages use http(s) origins; do not let arbitrary sites impersonate the
+  // extension connection just because they can reach localhost.
+  if (!origin) return false;
+  return origin.startsWith('http://') || origin.startsWith('https://') || origin === 'null';
+}
+
 // WebSocket server for the extension to connect to
-const wss = new WebSocketServer({ server: httpServer });
+const wss = new WebSocketServer({
+  server: httpServer,
+  verifyClient: ({ req }, done) => {
+    const remoteAddress = req.socket.remoteAddress;
+    const isLocal = remoteAddress === '127.0.0.1' || remoteAddress === '::1' || remoteAddress === '::ffff:127.0.0.1';
+    const hasExtension = extensionWs && extensionWs.readyState === 1;
+    done(isLocal && !hasExtension && !isForbiddenWebSocketOrigin(req), 403, 'Forbidden');
+  }
+});
 
 wss.on('connection', (ws, req) => {
+  if (extensionWs && extensionWs.readyState === 1) {
+    ws.close();
+    return;
+  }
+
   // Only accept connections from localhost
-  const origin = req.socket.remoteAddress;
-  if (origin !== '127.0.0.1' && origin !== '::1' && origin !== '::ffff:127.0.0.1') {
+  const remoteAddress = req.socket.remoteAddress;
+  if (remoteAddress !== '127.0.0.1' && remoteAddress !== '::1' && remoteAddress !== '::ffff:127.0.0.1') {
+    ws.close();
+    return;
+  }
+
+  if (isForbiddenWebSocketOrigin(req)) {
     ws.close();
     return;
   }
@@ -94,10 +148,30 @@ function sendToExtension(msg) {
 function readBody(req) {
   return new Promise((resolve) => {
     let data = '';
-    req.on('data', (chunk) => data += chunk);
+    let done = false;
+    req.on('data', (chunk) => {
+      data += chunk;
+      if (!done && data.length > MAX_BODY_BYTES) {
+        done = true;
+        resolve({ ok: false, status: 413, error: 'Request body too large' });
+        req.destroy();
+      }
+    });
+    req.on('error', () => {
+      if (!done) {
+        done = true;
+        resolve({ ok: false, status: 400, error: 'Failed to read request body' });
+      }
+    });
     req.on('end', () => {
-      try { resolve(JSON.parse(data)); }
-      catch { resolve({}); }
+      if (done) return;
+      done = true;
+      if (!data) {
+        resolve({ ok: true, body: {} });
+        return;
+      }
+      try { resolve({ ok: true, body: JSON.parse(data) }); }
+      catch { resolve({ ok: false, status: 400, error: 'Invalid JSON request body' }); }
     });
   });
 }

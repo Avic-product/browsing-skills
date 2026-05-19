@@ -70,9 +70,11 @@ All POST endpoints accept optional `tabId`; if omitted, the active tab is used.
 ## Security notes
 
 - The bridge binds to `127.0.0.1` only — no remote access.
-- The WebSocket server rejects connections from any origin except localhost.
+- The HTTP server rejects browser-origin requests (`Origin` / cross-site Fetch Metadata headers), including no-CORS POSTs from arbitrary websites to localhost.
+- The WebSocket server only accepts localhost connections and rejects web-page origins during the handshake; the companion extension connects with a `chrome-extension://` origin.
 - The extension requires `debugger` permission (Chrome shows a yellow "being debugged" banner while running).
 - **Anything your agent sends runs in the context of the active tab.** Only use with trusted agents and scripts you've reviewed.
+- Local processes on the same machine can still call the bridge while it is running. Treat the bridge as a trusted local development tool, not a sandbox boundary.
 
 ## Relation to browsing-skills
 
