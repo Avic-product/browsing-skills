@@ -28,6 +28,10 @@ The library currently includes skills for:
 | LinkedIn | [`skills/linkedin.com`](./skills/linkedin.com) | `post-data` |
 | TikTok | [`skills/tiktok.com`](./skills/tiktok.com) | `get-post-analytics`, `get-posts-list`, `download-post-video` |
 | Facebook | [`skills/facebook.com`](./skills/facebook.com) | `marketplace-search`, `marketplace-listing-data`, `marketplace-seller-data` |
+| Amazon | [`skills/amazon.com`](./skills/amazon.com) | `search`, `product-data`, `grocery-storefront`, `cart-data`, `add-to-cart` |
+| Walmart | [`skills/walmart.com`](./skills/walmart.com) | `search`, `product-data`, `cart-data`, `add-to-cart` |
+| Target | [`skills/target.com`](./skills/target.com) | `search`, `product-data`, `cart-data`, `add-to-cart` |
+| AliExpress | [`skills/aliexpress.com`](./skills/aliexpress.com) | `search`, `product-data`, `cart-data`, `add-to-cart` |
 | Booking.com | [`skills/booking.com`](./skills/booking.com) | `search`, `hotel-data`, `reviews`, `book-room` |
 | Airbnb | [`skills/airbnb.com`](./skills/airbnb.com) | `search`, `listing-data`, `reviews`, `availability-price` |
 

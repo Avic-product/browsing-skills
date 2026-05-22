@@ -135,7 +135,58 @@ Notes:
 - Booking search is a stronger benchmark than X search because the page is denser and the result-card structure contains more fields.
 - The no-skill path consumed substantially more tokens due to repeated DOM inspection and selector repair.
 
-### 6. LinkedIn post-data
+### 6. Amazon search
+
+- **Skill:** `skills/amazon.com`
+- **Action reference:** `skills/amazon.com/references/search.md`
+- **Target search:** `electric drum kit`
+- **Goal:** Compare visible Amazon search-card extraction with and without the maintained search action.
+- **Browser layer:** Chrome Bridge on `POST /run-action` for the skill path; DOM inspection plus `POST /eval` for the no-skill path. Both branches used the same logged-in Chrome profile, `www.amazon.com`, EUR pricing, and shipping destination shown as Greece.
+
+Initial real-world API benchmark, May 20, 2026:
+
+| Mode | Total API Tokens | API Calls | Wall Time | Result Quality |
+|---|---:|---:|---:|---|
+| With skill, clean action selection | 17,588 | 3 | ~20.7s total | Complete visible product cards |
+| Without skill, DOM-inspection loop | 21,770 | 6 | ~22.3s total | Partial/noisy product cards |
+
+Observed result quality:
+
+- **With skill:** returned 5 visible result cards with ASIN, title, price, rating, review count, product URL, image URL, delivery, and availability fields.
+- **Without skill:** returned 5 visible result cards and result count, but product URLs were missing and delivery/availability text was noisier due to runtime selector discovery.
+
+Notes:
+
+- A failed setup attempt accidentally executed the reference file's usage-example code block instead of the action-object block; it was discarded per the fairness rule against counting harness/setup failures.
+- The no-skill branch required more API and browser calls to inspect page structure, derive extraction logic, and repair output shape.
+
+### 7. Amazon product-data
+
+- **Skill:** `skills/amazon.com`
+- **Action reference:** `skills/amazon.com/references/product-data.md`
+- **Target URL:** `https://www.amazon.com/dp/B0C43R8SRB`
+- **Goal:** Compare visible Amazon product detail extraction with and without the maintained product-data action.
+- **Browser layer:** Chrome Bridge on `POST /run-action` for the skill path; DOM inspection plus `POST /eval` for the no-skill path. Both branches used the same shared Chrome profile, `www.amazon.com`, and current locale/currency/shipping state.
+- **Captured at:** `2026-05-20T05:59:09.827Z`
+
+Initial real-world API benchmark, May 20, 2026:
+
+| Mode | Total API Tokens | API Calls | Wall Time | Result Quality |
+|---|---:|---:|---:|---|
+| With skill, clean action selection | 12,321 | 3 | ~9.6s total | Complete product data |
+| Without skill, DOM-inspection loop | 8,673 | 4 | ~19.6s total | Partial product data |
+
+Observed result quality:
+
+- **With skill:** returned ASIN, title, price, availability, seller field, rating, review count, 8 bullets, 12 images, Add to Cart state, and Buy Now visibility.
+- **Without skill:** returned ASIN, title, brand, price, availability, seller, rating, review count, 8 bullets, 8 images, and Add to Cart state, but missed Buy Now visibility and included locale/bot-text caveats.
+
+Notes:
+
+- Fresh API usage was captured for both branches with `gpt-5.4-mini`; with-skill usage was 12,122 prompt tokens and 199 completion tokens, while no-skill usage was 7,186 prompt tokens and 1,487 completion tokens.
+- This stable product page was easy for the no-skill branch to inspect, so it used fewer tokens; the skill branch used fewer browser calls, ran faster, and returned richer image coverage plus Buy Now visibility.
+
+### 8. LinkedIn post-data
 
 - **Skill:** `skills/linkedin.com`
 - **Action reference:** `skills/linkedin.com/references/post-data.md`
@@ -143,7 +194,7 @@ Notes:
 - **Goal:** Compare LinkedIn post extraction via maintained JSON-LD/DOM guidance versus runtime discovery.
 - **Status:** Planned.
 
-### 7. TikTok Studio actions
+### 9. TikTok Studio actions
 
 - **Skill:** `skills/tiktok.com`
 - **Action references:**
