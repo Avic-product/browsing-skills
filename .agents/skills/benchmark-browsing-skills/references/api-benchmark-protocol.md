@@ -28,6 +28,17 @@ Before running, define:
 
 Use the same browser layer and page state for both runs unless the benchmark explicitly compares browser layers.
 
+## Browser Layer Selection
+
+Prefer the browser layer that matches the real action's expected production use.
+
+- Use **Chrome Bridge `/run-action`** when the action depends on an existing user session, login, account state, location, cart state, personalization, anti-bot trust, or anything else that normally lives in the user's Chrome profile.
+- Use **Playwright** when the action is public and unauthenticated, or when you intentionally create and document an equivalent browser profile/cookie jar for both branches.
+- Do not compare a logged-in Chrome Bridge with-skill run against a fresh Playwright no-skill run, or the reverse, unless the benchmark is explicitly about browser-layer differences.
+- If the browser layer differs from the action's normal expected use, mark the benchmark as limited and explain what state may be missing.
+
+For many social, marketplace, booking, cart, and account-adjacent actions in this repo, Chrome Bridge is the fair default because it preserves the user's real session.
+
 ## With-Skill Run
 
 Give the model:
@@ -35,7 +46,7 @@ Give the model:
 - the task
 - the target URL/query
 - the relevant site `SKILL.md`
-- only the chosen action reference file
+- only the chosen action reference file, trimmed to the action-facing spec
 - access to the same browser layer used by the baseline
 
 The with-skill run should:
@@ -49,6 +60,20 @@ The with-skill run should:
 5. return concise structured output
 
 Do not give the with-skill model unrelated action references. Progressive disclosure is part of the benchmark.
+
+### Action-Facing Spec
+
+The measured with-skill branch should receive only what a normal agent needs to execute the action:
+
+- action name and short purpose
+- navigation requirements
+- input schema / required params
+- the executable action object or the already-registered action name
+- return shape and success criteria
+
+Exclude benchmark history, prior benchmark tables, maintenance notes, unrelated examples, README prose, and the benchmarking protocol itself from the measured prompt. If the full markdown file is injected verbatim, report that as a separate **full-doc load** measurement, not the primary action benchmark.
+
+If using Chat Completions or another multi-turn API loop, remember that the original messages are usually counted again on later calls. A 3k-token reference sent through a 3-call loop can add about 9k prompt tokens. Log per-call usage so this multiplication is visible.
 
 ## Without-Skill Run
 
@@ -84,6 +109,7 @@ For each branch, record:
 - prompt token count
 - completion token count
 - total token count
+- per-call token usage
 - reasoning tokens if the API reports them
 - number of API calls
 - wall time from branch start to final answer
@@ -93,10 +119,29 @@ For each branch, record:
 
 Token counts should come from API `usage` whenever available. If using local estimates, clearly label them as estimates and state what is excluded.
 
+Persist a local ignored run log when possible, including each request payload, response usage object, tool call, browser response size, and timing. Do not commit logs that contain API keys, cookies, personal account data, or page content that should stay private.
+
+## Freshness And Provenance
+
+Existing benchmark sections are historical context only. Never copy existing numbers into a new benchmark result.
+
+A fresh benchmark must include newly captured:
+
+- API `usage` objects or totals for both branches
+- per-call API usage for both branches, when available
+- branch start/end timestamps or measured wall time
+- browser layer used by each branch
+- browser/tool call counts
+- final result summaries for both branches
+- model name and any relevant profile/session assumptions
+
+If any of these are missing, label the result as not run or limited instead of updating official benchmark tables.
+
 ## Fairness Rules
 
 - Use the same target and success criteria for both branches.
 - Use the same browser/page state unless explicitly comparing browser state.
+- Use the same browser layer unless explicitly comparing browser layers.
 - Run branches close together in time for live sites.
 - Do not let the no-skill run read the skill, reference file, or selector code.
 - Do not count failed harness/setup attempts as benchmark evidence.
@@ -143,6 +188,7 @@ Update all three places:
 
 - **Target:** `<target>`
 - **Browser layer:** <Playwright/Chrome Bridge/etc.>
+- **Captured at:** <ISO timestamp>
 - **Success criteria:** <required fields>
 
 | Mode | Total API Tokens | API Calls | Wall Time | Result Quality |
