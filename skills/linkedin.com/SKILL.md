@@ -11,6 +11,7 @@ Use this index to choose the LinkedIn action that matches the user request, then
 
 - **post-data** — Extract a LinkedIn post's content, author, reactions, comments, reposts, and canonical metadata. Full spec: [references/post-data.md](references/post-data.md).
 - **profile-data** — Extract name, headline, location, connection degree, about, experience, education, and skills from a LinkedIn profile page. Full spec: [references/profile-data.md](references/profile-data.md).
+- **job-data** — Extract title, company, location, description, employment type, years of experience, and industry from a LinkedIn job posting. Full spec: [references/job-data.md](references/job-data.md).
 
 ## Benchmarks
 
